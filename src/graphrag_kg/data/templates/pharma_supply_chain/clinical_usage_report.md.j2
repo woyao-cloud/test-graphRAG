@@ -1,0 +1,76 @@
+# 临床用药分析报告
+
+## 报告概述
+
+**报告期间**：{{ dates[9] }} - {{ dates[10] }}
+**编制单位**：临床药学质控中心
+**数据来源**：各医院HIS系统药品使用数据
+
+---
+
+## 一、{{ by_type['hospital'][0].name }} 用药分析
+
+### 肿瘤内科用药概况
+
+**科室**：{{ by_type['clinical_department'][0].name }}
+**科室主任**：{{ by_type['person'][0].name }}
+
+{{ by_type['person'][0].name }}主任领导的{{ by_type['clinical_department'][0].name }}是国家级临床重点专科，年收治肿瘤患者超过2万人次。该科室对抗肿瘤药物的使用管理规范，严格执行NCCN和CSCO指南推荐方案。
+
+#### 抗肿瘤药物使用量排名（前五）
+
+| 排名 | 药品名称 | 生产企业 | 主要适应症 | 月均用量 |
+|-----|---------|---------|-----------|---------|
+| 1 | {{ by_type['drug'][0].name }} | {{ by_type['pharmaceutical_company'][0].name }} | {{ by_type['indication'][0].name }}、{{ by_type['indication'][1].name }} | {{ amounts[3] }} |
+| 2 | {{ by_type['drug'][1].name }} | {{ by_type['pharmaceutical_company'][0].name }} | {{ by_type['indication'][0].name }} | {{ amounts[4] }} |
+| 3 | {{ by_type['drug'][2].name }} | {{ by_type['pharmaceutical_company'][1].name }} | {{ by_type['indication'][2].name }} | {{ amounts[5] }} |
+| 4 | {{ by_type['drug'][5].name }} | {{ by_type['pharmaceutical_company'][0].name }} | {{ by_type['indication'][2].name }}、{{ by_type['indication'][4].name }} | {{ amounts[6] }} |
+| 5 | {{ by_type['drug'][6].name }} | {{ by_type['pharmaceutical_company'][2].name }} | {{ by_type['indication'][0].name }} | {{ amounts[7] }} |
+
+**临床评价**：{{ by_type['drug'][0].name }}在{{ by_type['indication'][1].name }}的治疗中显示出良好的疗效和安全性。{{ by_type['clinical_department'][0].name }}参与了该药的上市后临床研究（PMS），数据显示客观缓解率（ORR）达到65.3%，疾病控制率（DCR）达到89.1%。
+
+### 血液科用药概况
+
+**科室**：{{ by_type['clinical_department'][1].name }}
+
+血液科在{{ by_type['drug'][3].name }}的使用上积累了丰富经验，该药由{{ by_type['pharmaceutical_company'][1].name }}生产，通过{{ by_type['distributor'][1].name }}供应，在肾性贫血和化疗相关性贫血的治疗中发挥了重要作用。
+
+---
+
+## 二、{{ by_type['hospital'][3].name }} 用药分析
+
+### 神经外科用药
+
+**科室**：{{ by_type['clinical_department'][4].name }}
+
+{{ by_type['clinical_department'][4].name }}在胶质母细胞瘤术后辅助化疗中，主要使用{{ by_type['drug'][1].name }}（{{ by_type['pharmaceutical_company'][0].name }}生产）和{{ by_type['drug'][7].name }}（{{ by_type['pharmaceutical_company'][2].name }}生产），结合放疗进行Stupp方案治疗{{ by_type['indication'][3].name }}。
+
+### 消化内科用药
+
+**科室**：{{ by_type['clinical_department'][5].name }}
+
+{{ by_type['clinical_department'][5].name }}对{{ by_type['indication'][4].name }}和{{ by_type['indication'][5].name }}的靶向治疗中，主要使用{{ by_type['drug'][5].name }}和{{ by_type['drug'][6].name }}。
+
+---
+
+## 三、{{ by_type['hospital'][4].name }} 用药分析
+
+### 肿瘤内科
+
+该院肿瘤内科在{{ by_type['indication'][1].name }}治疗中采用{{ by_type['drug'][0].name }}联合{{ by_type['drug'][6].name }}的二线治疗方案，临床研究（发表于{{ dates[11] }}）显示中位无进展生存期（mPFS）延长至8.4个月。
+
+---
+
+## 四、关键发现
+
+1. **供应链集中度**：{{ by_type['drug'][0].name }}的供应通过{{ by_type['distributor'][0].name }}、{{ by_type['distributor'][2].name }}两家分销商完成，存在供应集中风险。
+
+2. **原料药依赖**：{{ by_type['drug'][0].name }}依赖{{ by_type['api_raw_material'][0].name }}，该原料药全球仅3家供应商通过GMP认证。
+
+3. **跨院共用药品**：{{ by_type['drug'][0].name }}、{{ by_type['drug'][1].name }}、{{ by_type['drug'][2].name }}在全部6家监测医院中均有使用，属于核心抗肿瘤药物。
+
+4. **临床科室分布**：抗肿瘤药物主要集中在{{ by_type['clinical_department'][0].name }}、{{ by_type['clinical_department'][4].name }}、{{ by_type['clinical_department'][5].name }}等科室。
+
+---
+
+*报告生成日期：{{ dates[12] }}*

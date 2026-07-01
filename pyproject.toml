@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "graphrag-kg"
+version = "0.1.0"
+description = "GraphRAG Knowledge Graph Q&A System with Neo4j + LanceDB hybrid storage"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10,<3.13"
+authors = [
+    {name = "GraphRAG-KG Team"}
+]
+keywords = ["graphrag", "knowledge-graph", "neo4j", "rag", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "graphrag>=3.0.0,<4.0.0",
+    "neo4j>=5.20.0",
+    "typer>=0.12.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "pymupdf>=1.23.0",
+    "beautifulsoup4>=4.12.0",
+    "chardet>=5.0.0",
+    "markdown>=3.5.0",
+    "faker>=22.0.0",
+    "jinja2>=3.1.0",
+    "pyarrow>=14.0.0",
+    "pandas>=2.0.0",
+    "lancedb>=0.6.0",
+]
+
+[project.optional-dependencies]
+api = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-mock>=3.12.0",
+    "mypy>=1.8.0",
+    "ruff>=0.3.0",
+]
+
+[project.scripts]
+graphrag-kg = "graphrag_kg.cli.main:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true

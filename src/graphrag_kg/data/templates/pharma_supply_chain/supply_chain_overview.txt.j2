@@ -1,0 +1,143 @@
+医药供应链全景报告
+================================================================================
+编制单位：医药供应链管理协会
+报告期间：{{ dates[13] }} - {{ dates[14] }}
+================================================================================
+
+一、供应链全景概述
+
+中国医药供应链呈现"原料药-生产-流通-终端"四级结构，其中：
+
+1. 上游（原料药）：中国是全球最大的原料药生产和出口国，化学原料药年产量超过300万吨。
+2. 中游（制剂生产）：规模以上制药企业超过7000家，行业集中度持续提升。
+3. 下游（流通）：以{{ by_type['distributor'][0].name }}、{{ by_type['distributor'][1].name }}、{{ by_type['distributor'][2].name }}、{{ by_type['distributor'][3].name }}为代表的龙头企业占据超过40%市场份额。
+4. 终端（医院/药房）：公立医院仍是主要销售渠道，占比约65%。
+
+================================================================================
+二、重点品种供应链分析
+================================================================================
+
+【{{ by_type['drug'][0].name }} 供应链】
+
+  原料药环节：
+    {{ by_type['api_raw_material'][0].name }}
+    ├── 生产工艺：半合成法（从红豆杉枝叶提取10-DAB，再经化学半合成）
+    ├── 主要供应商：全球3家，国内2家通过GMP认证
+    └── 年产能：约{{ amounts[0] }}
+
+  制剂生产环节：
+    {{ by_type['pharmaceutical_company'][0].name }}
+    ├── 剂型：注射剂（粉针/水针）
+    ├── 年产量：{{ amounts[1] }}支
+    └── 批文持有：{{ by_type['drug_approval'][0].name }}
+
+  流通环节：
+    ├── {{ by_type['distributor'][0].name }}（{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}、{{ by_type['region'][2].name }}）
+    └── {{ by_type['distributor'][2].name }}（{{ by_type['region'][0].name }}）
+
+  终端使用：
+    ├── {{ by_type['hospital'][0].name }} → {{ by_type['clinical_department'][0].name }}
+    ├── {{ by_type['hospital'][1].name }} → {{ by_type['clinical_department'][0].name }}、{{ by_type['clinical_department'][4].name }}
+    ├── {{ by_type['hospital'][2].name }} → {{ by_type['clinical_department'][0].name }}
+    ├── {{ by_type['hospital'][3].name }} → {{ by_type['clinical_department'][4].name }}
+    ├── {{ by_type['hospital'][4].name }} → {{ by_type['clinical_department'][0].name }}
+    └── {{ by_type['hospital'][5].name }} → {{ by_type['clinical_department'][0].name }}
+
+  适应症覆盖：
+    ├── {{ by_type['indication'][0].name }}
+    ├── {{ by_type['indication'][1].name }}
+    └── {{ by_type['indication'][3].name }}
+
+-------------------------------------------------------------------------------
+
+【{{ by_type['drug'][1].name }} 供应链】
+
+  原料药环节：
+    {{ by_type['api_raw_material'][2].name }}
+    ├── 生产工艺：全化学合成
+    └── 年产能：{{ amounts[3] }}
+
+  制剂生产环节：
+    {{ by_type['pharmaceutical_company'][0].name }}
+    ├── 剂型：片剂
+    └── 批文持有：{{ by_type['drug_approval'][1].name }}
+
+  流通环节：
+    └── {{ by_type['distributor'][0].name }}（{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}、{{ by_type['region'][2].name }}）
+
+  终端使用：
+    ├── {{ by_type['hospital'][0].name }} → {{ by_type['clinical_department'][0].name }}
+    ├── {{ by_type['hospital'][2].name }} → {{ by_type['clinical_department'][0].name }}
+    ├── {{ by_type['hospital'][3].name }} → {{ by_type['clinical_department'][4].name }}
+    └── {{ by_type['hospital'][4].name }} → {{ by_type['clinical_department'][0].name }}
+
+  适应症覆盖：
+    └── {{ by_type['indication'][0].name }}（EGFR T790M突变阳性）
+
+-------------------------------------------------------------------------------
+
+【{{ by_type['drug'][2].name }} 供应链】
+
+  制剂生产环节：
+    {{ by_type['pharmaceutical_company'][1].name }}
+    └── 批文持有：{{ by_type['drug_approval'][3].name }}
+
+  流通环节：
+    ├── {{ by_type['distributor'][0].name }}（{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}）
+    └── {{ by_type['distributor'][1].name }}（{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}、{{ by_type['region'][3].name }}）
+
+  终端使用：
+    ├── {{ by_type['hospital'][0].name }} → {{ by_type['clinical_department'][0].name }}
+    ├── {{ by_type['hospital'][1].name }} → {{ by_type['clinical_department'][0].name }}
+    ├── {{ by_type['hospital'][2].name }} → {{ by_type['clinical_department'][0].name }}
+    ├── {{ by_type['hospital'][3].name }} → {{ by_type['clinical_department'][4].name }}
+    └── {{ by_type['hospital'][5].name }} → {{ by_type['clinical_department'][0].name }}
+
+  适应症覆盖：
+    ├── {{ by_type['indication'][2].name }}
+    └── {{ by_type['indication'][3].name }}
+
+-------------------------------------------------------------------------------
+
+【{{ by_type['drug'][6].name }} 供应链】
+
+  原料药环节：
+    {{ by_type['api_raw_material'][4].name }}
+    └── 供应商：{{ by_type['pharmaceutical_company'][2].name }}自主生产
+
+  制剂生产环节：
+    {{ by_type['pharmaceutical_company'][2].name }}
+
+  流通环节：
+    └── {{ by_type['distributor'][2].name }}（{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}）
+
+  终端使用：
+    ├── {{ by_type['hospital'][0].name }} → {{ by_type['clinical_department'][0].name }}
+    ├── {{ by_type['hospital'][2].name }} → {{ by_type['clinical_department'][0].name }}
+    ├── {{ by_type['hospital'][3].name }} → {{ by_type['clinical_department'][5].name }}
+    └── {{ by_type['hospital'][4].name }} → {{ by_type['clinical_department'][0].name }}
+
+  适应症覆盖：
+    ├── {{ by_type['indication'][0].name }}
+    ├── {{ by_type['indication'][1].name }}
+    ├── {{ by_type['indication'][4].name }}
+    └── {{ by_type['indication'][5].name }}
+
+================================================================================
+三、供应链风险分析
+================================================================================
+
+1. 原料药集中供应风险：
+   {{ by_type['api_raw_material'][0].name }}的全球供应商仅3家，任何一家出现质量问题或产能中断，将直接影响{{ by_type['drug'][0].name }}的生产和供应。
+
+2. 分销渠道集中风险：
+   {{ by_type['drug'][0].name }}和{{ by_type['drug'][1].name }}的分销高度依赖{{ by_type['distributor'][0].name }}，在{{ by_type['region'][0].name }}市场几乎形成独家分销格局。
+
+3. 终端用药集中度：
+   {{ by_type['clinical_department'][0].name }}是抗肿瘤药物的最主要使用科室，科室用药目录的任何调整都可能对上游供应链产生传导效应。
+
+4. 区域覆盖不均：
+   {{ by_type['region'][3].name }}在部分创新药的可及性方面仍存在差距，主要原因是分销网络覆盖不足。
+
+================================================================================
+报告日期：{{ dates[14] }}

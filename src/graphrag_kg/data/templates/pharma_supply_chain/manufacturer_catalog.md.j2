@@ -1,0 +1,72 @@
+# 药品生产商产品目录
+
+## 概述
+
+本目录收录了主要制药企业的核心产品信息、生产能力和质量认证情况。
+
+---
+
+## 恒瑞医药
+
+**企业概况**：{{ by_type['pharmaceutical_company'][0].name }}成立于1997年，总部位于江苏省连云港市，是国内领先的创新药研发和生产企业。公司聚焦抗肿瘤、手术麻醉、造影剂等领域，拥有完整的研发、生产和销售体系。
+
+**核心产品线**：
+
+| 药品名称 | 剂型 | 适应症 | 注册批号 | 医保状态 |
+|---------|------|--------|---------|---------|
+| {{ by_type['drug'][0].name }} | 注射剂 | {{ by_type['indication'][0].name }}、{{ by_type['indication'][1].name }} | {{ by_type['drug_approval'][0].name }} | 国家医保乙类 |
+| {{ by_type['drug'][1].name }} | 片剂 | {{ by_type['indication'][0].name }} | {{ by_type['drug_approval'][1].name }} | 国家医保乙类 |
+| {{ by_type['drug'][5].name }} | 胶囊 | {{ by_type['indication'][2].name }}、{{ by_type['indication'][4].name }} | {{ by_type['drug_approval'][2].name }} | 国家医保乙类 |
+
+**生产设施**：公司拥有通过NMPA和FDA认证的GMP生产车间，年产能超过{{ amounts[0] }}支注射剂和{{ amounts[1] }}片剂。
+
+**原料药供应**：{{ by_type['drug'][0].name }}的活性药物成分（API）主要来源于{{ by_type['api_raw_material'][0].name }}，由{{ by_type['pharmaceutical_company'][0].name }}与供应商签订长期{{ by_type['supply_contract'][0].name }}确保供应稳定。
+
+---
+
+## 齐鲁制药
+
+**企业概况**：{{ by_type['pharmaceutical_company'][1].name }}成立于1958年，总部位于山东省济南市，是中国最大的仿制药生产企业之一，同时积极布局生物药和创新药。
+
+**核心产品线**：
+
+| 药品名称 | 剂型 | 适应症 | 注册批号 | 医保状态 |
+|---------|------|--------|---------|---------|
+| {{ by_type['drug'][2].name }} | 注射液 | {{ by_type['indication'][2].name }}、{{ by_type['indication'][3].name }} | {{ by_type['drug_approval'][3].name }} | 国家医保乙类 |
+| {{ by_type['drug'][3].name }} | 注射液 | 肾性贫血 | - | 国家医保甲类 |
+| {{ by_type['drug'][4].name }} | 片剂 | {{ by_type['indication'][0].name }} | - | 国家医保乙类 |
+
+**原料药**：{{ by_type['drug'][4].name }}的API为{{ by_type['api_raw_material'][1].name }}，由{{ by_type['pharmaceutical_company'][1].name }}自主生产，部分供应给其他制药企业。
+
+---
+
+## 石药集团
+
+**企业概况**：{{ by_type['pharmaceutical_company'][2].name }}成立于1997年，总部位于河北省石家庄市，以抗肿瘤、心脑血管、抗感染药物为特色。
+
+**核心产品线**：
+
+| 药品名称 | 剂型 | 适应症 |
+|---------|------|--------|
+| {{ by_type['drug'][6].name }} | 粉针 | {{ by_type['indication'][0].name }}、{{ by_type['indication'][4].name }}、{{ by_type['indication'][5].name }} |
+| {{ by_type['drug'][7].name }} | 胶囊 | {{ by_type['indication'][0].name }}、{{ by_type['indication'][1].name }} |
+
+**原料药**：{{ by_type['drug'][6].name }}的API来自{{ by_type['api_raw_material'][4].name }}，通过{{ by_type['supply_contract'][2].name }}保障供应。
+
+---
+
+## 正大天晴
+
+**企业概况**：{{ by_type['pharmaceutical_company'][3].name }}成立于1994年，总部位于江苏省南京市，在肝病、抗肿瘤领域具有较强竞争力。
+
+## 复星医药
+
+**企业概况**：{{ by_type['pharmaceutical_company'][4].name }}成立于1994年，总部位于上海，业务涵盖制药、医疗器械、医学诊断和医疗服务。
+
+---
+
+## 监管信息
+
+上述药品均已获得{{ by_type['regulatory_body'][0].name }}的上市批准。其中{{ by_type['drug'][0].name }}和{{ by_type['drug'][1].name }}同时获得{{ by_type['regulatory_body'][1].name }}的认可，具有国际市场准入资质。
+
+*本目录更新于{{ dates[0] }}*

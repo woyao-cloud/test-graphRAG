@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>药品质量检验报告</title>
+<style>
+body { font-family: SimSun, serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+h1 { text-align: center; }
+h2 { border-bottom: 2px solid #003366; color: #003366; }
+.pass { color: green; font-weight: bold; }
+.fail { color: red; font-weight: bold; }
+table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+th, td { border: 1px solid #999; padding: 8px; }
+th { background-color: #003366; color: white; }
+.section { margin: 25px 0; }
+</style>
+</head>
+<body>
+
+<h1>药品质量监督抽检报告</h1>
+
+<p><strong>检验机构</strong>：{{ by_type['regulatory_body'][0].name }}药品检验研究院</p>
+<p><strong>报告编号</strong>：QC-{{ dates[15] }}</p>
+<p><strong>抽检日期</strong>：{{ dates[16] }}</p>
+
+<div class="section">
+<h2>一、抽检概况</h2>
+<p>本次抽检覆盖{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}、{{ by_type['region'][2].name }}的6家三甲医院药房及4家分销商仓库，共抽取样品32批次。</p>
+</div>
+
+<div class="section">
+<h2>二、检验结果汇总</h2>
+
+<table>
+<tr>
+  <th>药品名称</th>
+  <th>生产企业</th>
+  <th>批号</th>
+  <th>抽检来源</th>
+  <th>检验项目</th>
+  <th>结果</th>
+</tr>
+<tr>
+  <td>{{ by_type['drug'][0].name }}</td>
+  <td>{{ by_type['pharmaceutical_company'][0].name }}</td>
+  <td>20241001A</td>
+  <td>{{ by_type['hospital'][0].name }}药房</td>
+  <td>含量、有关物质、无菌</td>
+  <td class="pass">合格</td>
+</tr>
+<tr>
+  <td>{{ by_type['drug'][0].name }}</td>
+  <td>{{ by_type['pharmaceutical_company'][0].name }}</td>
+  <td>20240915B</td>
+  <td>{{ by_type['distributor'][0].name }}仓库</td>
+  <td>含量、有关物质、无菌</td>
+  <td class="pass">合格</td>
+</tr>
+<tr>
+  <td>{{ by_type['drug'][1].name }}</td>
+  <td>{{ by_type['pharmaceutical_company'][0].name }}</td>
+  <td>20241102C</td>
+  <td>{{ by_type['hospital'][0].name }}药房</td>
+  <td>含量、溶出度、有关物质</td>
+  <td class="pass">合格</td>
+</tr>
+<tr>
+  <td>{{ by_type['drug'][2].name }}</td>
+  <td>{{ by_type['pharmaceutical_company'][1].name }}</td>
+  <td>20241020D</td>
+  <td>{{ by_type['hospital'][1].name }}药房</td>
+  <td>含量、纯度、内毒素</td>
+  <td class="pass">合格</td>
+</tr>
+<tr>
+  <td>{{ by_type['drug'][3].name }}</td>
+  <td>{{ by_type['pharmaceutical_company'][1].name }}</td>
+  <td>20240805E</td>
+  <td>{{ by_type['distributor'][1].name }}仓库</td>
+  <td>效价、纯度、内毒素</td>
+  <td class="pass">合格</td>
+</tr>
+<tr>
+  <td>{{ by_type['drug'][6].name }}</td>
+  <td>{{ by_type['pharmaceutical_company'][2].name }}</td>
+  <td>20240928F</td>
+  <td>{{ by_type['hospital'][3].name }}药房</td>
+  <td>含量、有关物质、无菌</td>
+  <td class="pass">合格</td>
+</tr>
+</table>
+
+<p><strong>总合格率</strong>：100%（6/6批次）</p>
+</div>
+
+<div class="section">
+<h2>三、供应链质量管理评估</h2>
+
+<h3>3.1 冷链物流评估</h3>
+<p>对{{ by_type['distributor'][0].name }}和{{ by_type['distributor'][1].name }}的冷链运输车辆进行了温控数据核查。{{ by_type['drug'][2].name }}和{{ by_type['drug'][3].name }}的冷链运输温度记录完整，全程保持在2-8°C范围内，符合GSP规范。</p>
+
+<h3>3.2 药品追溯体系</h3>
+<p>抽检药品的电子监管码追溯信息完整。从生产企业（{{ by_type['pharmaceutical_company'][0].name }}、{{ by_type['pharmaceutical_company'][1].name }}、{{ by_type['pharmaceutical_company'][2].name }}）到分销商（{{ by_type['distributor'][0].name }}、{{ by_type['distributor'][1].name }}）再到终端医院（{{ by_type['hospital'][0].name }}、{{ by_type['hospital'][1].name }}、{{ by_type['hospital'][3].name }}），全链条追溯信息可在30分钟内完成查询。</p>
+
+<h3>3.3 质量风险提示</h3>
+<ul>
+<li>{{ by_type['drug'][0].name }}的API来源{{ by_type['api_raw_material'][0].name }}，其供应商审计报告将于{{ dates[17] }}到期，建议提醒{{ by_type['pharmaceutical_company'][0].name }}及时更新。</li>
+<li>{{ by_type['drug'][1].name }}的生产工艺中涉及{{ by_type['api_raw_material'][2].name }}的晶型控制，建议加强该中间体的质量内控标准。</li>
+<li>{{ by_type['hospital'][0].name }}和{{ by_type['hospital'][3].name }}的药品储存条件检查均符合规定，温湿度记录完整。</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>四、结论</h2>
+<p>本次抽检的6批次抗肿瘤药物全部合格，药品生产质量管理体系运行有效。供应链各环节（{{ by_type['pharmaceutical_company'][0].name }} → {{ by_type['distributor'][0].name }} → {{ by_type['hospital'][0].name }}）和（{{ by_type['pharmaceutical_company'][1].name }} → {{ by_type['distributor'][1].name }} → {{ by_type['hospital'][1].name }}）的药品质量可追溯性良好。</p>
+<p>建议相关企业关注原料药供应商管理，确保供应链上游质量稳定性。</p>
+</div>
+
+<p><em>报告日期：{{ dates[18] }}</em></p>
+
+</body>
+</html>

@@ -1,0 +1,76 @@
+# 药品注册审批文件
+
+## {{ by_type['regulatory_body'][0].name }} 药品注册批件
+
+---
+
+### 批件一：{{ by_type['drug_approval'][0].name }}
+
+| 项目 | 内容 |
+|------|------|
+| **药品名称** | {{ by_type['drug'][0].name }} |
+| **生产企业** | {{ by_type['pharmaceutical_company'][0].name }} |
+| **剂型** | 注射剂 |
+| **规格** | 100mg/支 |
+| **适应症** | {{ by_type['indication'][0].name }}、{{ by_type['indication'][1].name }} |
+| **审批日期** | {{ dates[4] }} |
+| **批件有效期** | 至2029年 |
+| **原料药来源** | {{ by_type['api_raw_material'][0].name }} |
+
+**审批意见**：经审查，本品符合药品注册管理有关规定，同意发给药品注册证书。本品为化学药品第4类，视同通过一致性评价。
+
+---
+
+### 批件二：{{ by_type['drug_approval'][1].name }}
+
+| 项目 | 内容 |
+|------|------|
+| **药品名称** | {{ by_type['drug'][1].name }} |
+| **生产企业** | {{ by_type['pharmaceutical_company'][0].name }} |
+| **剂型** | 片剂 |
+| **规格** | 80mg/片 |
+| **适应症** | {{ by_type['indication'][0].name }}（EGFR T790M突变阳性） |
+| **审批日期** | {{ dates[5] }} |
+| **批件有效期** | 至2028年 |
+| **原料药来源** | {{ by_type['api_raw_material'][2].name }} |
+
+**审批意见**：本品为化学药品第1类创新药，经临床研究证明对EGFR T790M突变阳性的局部晚期或转移性{{ by_type['indication'][0].name }}具有显著疗效，同意附条件批准上市。
+
+---
+
+### 批件三：{{ by_type['drug_approval'][2].name }}
+
+| 项目 | 内容 |
+|------|------|
+| **药品名称** | {{ by_type['drug'][5].name }} |
+| **生产企业** | {{ by_type['pharmaceutical_company'][0].name }} |
+| **剂型** | 胶囊 |
+| **规格** | 25mg/粒 |
+| **适应症** | {{ by_type['indication'][2].name }}、{{ by_type['indication'][4].name }} |
+| **审批日期** | {{ dates[6] }} |
+| **批件有效期** | 至2027年 |
+
+---
+
+### 批件四：{{ by_type['drug_approval'][3].name }}
+
+| 项目 | 内容 |
+|------|------|
+| **药品名称** | {{ by_type['drug'][2].name }} |
+| **生产企业** | {{ by_type['pharmaceutical_company'][1].name }} |
+| **剂型** | 注射液 |
+| **规格** | 400mg/瓶 |
+| **适应症** | {{ by_type['indication'][2].name }}、{{ by_type['indication'][3].name }} |
+| **审批日期** | {{ dates[7] }} |
+| **批件有效期** | 至2029年 |
+
+---
+
+## {{ by_type['regulatory_body'][1].name }} 认可
+
+{{ by_type['drug'][0].name }}和{{ by_type['drug'][1].name }}已获得{{ by_type['regulatory_body'][1].name }}的临床试验许可（IND），正在美国开展II期临床研究。{{ by_type['pharmaceutical_company'][0].name }}已提交新药上市申请（NDA）前的预沟通请求。
+
+---
+
+*文件生成日期：{{ dates[8] }}*
+*数据来源：{{ by_type['regulatory_body'][0].name }}药品审评中心*

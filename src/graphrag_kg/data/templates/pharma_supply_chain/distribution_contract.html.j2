@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>药品分销合同及网络覆盖</title>
+<style>
+body { font-family: SimSun, serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+h1 { text-align: center; }
+h2 { border-bottom: 1px solid #333; }
+table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+th, td { border: 1px solid #666; padding: 8px; text-align: left; }
+th { background-color: #f0f0f0; }
+.contract { margin: 20px 0; padding: 15px; border: 1px solid #999; }
+</style>
+</head>
+<body>
+
+<h1>药品分销网络及合同概览</h1>
+
+<p><em>编制日期：{{ dates[3] }}</em></p>
+
+<h2>一、{{ by_type['distributor'][0].name }} — 分销网络</h2>
+
+<div class="contract">
+<h3>企业概况</h3>
+<p>{{ by_type['distributor'][0].name }}是中国最大的医药分销企业，网络覆盖全国31个省市自治区，在{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}、{{ by_type['region'][2].name }}拥有核心配送中心。</p>
+
+<h3>授权制药企业</h3>
+<ul>
+<li>{{ by_type['pharmaceutical_company'][0].name }} — 授权分销合同：{{ by_type['supply_contract'][0].name }}</li>
+<li>{{ by_type['pharmaceutical_company'][1].name }} — 授权分销合同：{{ by_type['supply_contract'][1].name }}</li>
+<li>{{ by_type['pharmaceutical_company'][4].name }} — 授权分销合同：{{ by_type['supply_contract'][3].name }}</li>
+</ul>
+
+<h3>分销药品</h3>
+<table>
+<tr><th>药品名称</th><th>生产商</th><th>覆盖区域</th></tr>
+<tr><td>{{ by_type['drug'][0].name }}</td><td>{{ by_type['pharmaceutical_company'][0].name }}</td><td>{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}、{{ by_type['region'][2].name }}</td></tr>
+<tr><td>{{ by_type['drug'][1].name }}</td><td>{{ by_type['pharmaceutical_company'][0].name }}</td><td>{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}、{{ by_type['region'][2].name }}</td></tr>
+<tr><td>{{ by_type['drug'][3].name }}</td><td>{{ by_type['pharmaceutical_company'][1].name }}</td><td>{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}</td></tr>
+<tr><td>{{ by_type['drug'][4].name }}</td><td>{{ by_type['pharmaceutical_company'][1].name }}</td><td>{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}、{{ by_type['region'][2].name }}</td></tr>
+</table>
+
+<h3>服务医院</h3>
+<p>{{ by_type['distributor'][0].name }}向以下医院提供药品配送服务：{{ by_type['hospital'][0].name }}、{{ by_type['hospital'][1].name }}、{{ by_type['hospital'][2].name }}、{{ by_type['hospital'][4].name }}、{{ by_type['hospital'][5].name }}。</p>
+</div>
+
+<h2>二、{{ by_type['distributor'][1].name }} — 分销网络</h2>
+
+<div class="contract">
+<h3>企业概况</h3>
+<p>{{ by_type['distributor'][1].name }}是华润集团旗下的医药流通平台，在{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}、{{ by_type['region'][3].name }}具有强大的分销能力。</p>
+
+<h3>授权制药企业</h3>
+<ul>
+<li>{{ by_type['pharmaceutical_company'][0].name }} — 授权分销合同：{{ by_type['supply_contract'][1].name }}</li>
+<li>{{ by_type['pharmaceutical_company'][1].name }} — 授权分销合同：{{ by_type['supply_contract'][2].name }}</li>
+<li>{{ by_type['pharmaceutical_company'][2].name }} — 授权分销合同：{{ by_type['supply_contract'][3].name }}</li>
+</ul>
+
+<h3>分销药品</h3>
+<table>
+<tr><th>药品名称</th><th>生产商</th><th>覆盖区域</th></tr>
+<tr><td>{{ by_type['drug'][2].name }}</td><td>{{ by_type['pharmaceutical_company'][1].name }}</td><td>{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}、{{ by_type['region'][3].name }}</td></tr>
+<tr><td>{{ by_type['drug'][3].name }}</td><td>{{ by_type['pharmaceutical_company'][1].name }}</td><td>{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}</td></tr>
+<tr><td>{{ by_type['drug'][4].name }}</td><td>{{ by_type['pharmaceutical_company'][1].name }}</td><td>{{ by_type['region'][0].name }}、{{ by_type['region'][3].name }}</td></tr>
+<tr><td>{{ by_type['drug'][5].name }}</td><td>{{ by_type['pharmaceutical_company'][0].name }}</td><td>{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}</td></tr>
+</table>
+
+<h3>服务医院</h3>
+<p>{{ by_type['distributor'][1].name }}向以下医院提供药品配送服务：{{ by_type['hospital'][1].name }}、{{ by_type['hospital'][2].name }}、{{ by_type['hospital'][4].name }}、{{ by_type['hospital'][5].name }}。</p>
+</div>
+
+<h2>三、{{ by_type['distributor'][2].name }} — 分销网络</h2>
+
+<div class="contract">
+<h3>企业概况</h3>
+<p>{{ by_type['distributor'][2].name }}是上海医药集团旗下的医药分销平台，在{{ by_type['region'][0].name }}市场占有率领先。</p>
+
+<h3>授权制药企业</h3>
+<ul>
+<li>{{ by_type['pharmaceutical_company'][0].name }} — 授权分销合同：{{ by_type['supply_contract'][2].name }}</li>
+<li>{{ by_type['pharmaceutical_company'][2].name }} — 授权分销合同：{{ by_type['supply_contract'][0].name }}</li>
+<li>{{ by_type['pharmaceutical_company'][3].name }} — 授权分销合同：{{ by_type['supply_contract'][1].name }}</li>
+</ul>
+
+<h3>分销药品</h3>
+<table>
+<tr><th>药品名称</th><th>生产商</th><th>覆盖区域</th></tr>
+<tr><td>{{ by_type['drug'][0].name }}</td><td>{{ by_type['pharmaceutical_company'][0].name }}</td><td>{{ by_type['region'][0].name }}</td></tr>
+<tr><td>{{ by_type['drug'][6].name }}</td><td>{{ by_type['pharmaceutical_company'][2].name }}</td><td>{{ by_type['region'][0].name }}、{{ by_type['region'][1].name }}</td></tr>
+<tr><td>{{ by_type['drug'][7].name }}</td><td>{{ by_type['pharmaceutical_company'][2].name }}</td><td>{{ by_type['region'][0].name }}</td></tr>
+</table>
+
+<h3>服务医院</h3>
+<p>{{ by_type['distributor'][2].name }}向以下医院提供药品配送服务：{{ by_type['hospital'][0].name }}、{{ by_type['hospital'][2].name }}、{{ by_type['hospital'][3].name }}、{{ by_type['hospital'][4].name }}。</p>
+</div>
+
+<h2>四、{{ by_type['distributor'][3].name }} — 分销网络</h2>
+
+<div class="contract">
+<h3>企业概况</h3>
+<p>{{ by_type['distributor'][3].name }}是中国最大的民营医药分销企业，在{{ by_type['region'][1].name }}、{{ by_type['region'][3].name }}具有广泛覆盖。</p>
+
+<h3>授权制药企业</h3>
+<ul>
+<li>{{ by_type['pharmaceutical_company'][1].name }} — 授权分销合同：{{ by_type['supply_contract'][0].name }}</li>
+<li>{{ by_type['pharmaceutical_company'][2].name }} — 授权分销合同：{{ by_type['supply_contract'][2].name }}</li>
+</ul>
+
+<h3>分销药品</h3>
+<table>
+<tr><th>药品名称</th><th>生产商</th><th>覆盖区域</th></tr>
+<tr><td>{{ by_type['drug'][3].name }}</td><td>{{ by_type['pharmaceutical_company'][1].name }}</td><td>{{ by_type['region'][1].name }}、{{ by_type['region'][3].name }}</td></tr>
+<tr><td>{{ by_type['drug'][7].name }}</td><td>{{ by_type['pharmaceutical_company'][2].name }}</td><td>{{ by_type['region'][1].name }}、{{ by_type['region'][3].name }}</td></tr>
+</table>
+
+<h3>服务医院</h3>
+<p>{{ by_type['distributor'][3].name }}向以下医院提供药品配送服务：{{ by_type['hospital'][1].name }}、{{ by_type['hospital'][3].name }}、{{ by_type['hospital'][5].name }}。</p>
+</div>
+
+</body>
+</html>

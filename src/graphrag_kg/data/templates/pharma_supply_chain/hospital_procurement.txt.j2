@@ -1,0 +1,91 @@
+医院药品采购记录
+
+================================================================================
+采购周期：{{ dates[1] }} - {{ dates[2] }}
+文档编号：PROC-{{ seed }}-001
+================================================================================
+
+一、北京协和医院
+
+医院名称：{{ by_type['hospital'][0].name }}
+医院等级：{{ by_type['hospital'][0].properties.get('level', '三甲') }}
+采购负责人：{{ by_type['person'][0].name }}（药剂科主任）
+
+采购药品清单：
+  - {{ by_type['drug'][0].name }} | 规格：100mg/支 | 月采购量：{{ amounts[2] }} | 供应商：{{ by_type['distributor'][0].name }}
+  - {{ by_type['drug'][1].name }} | 规格：80mg/片 | 月采购量：{{ amounts[3] }} | 供应商：{{ by_type['distributor'][0].name }}
+  - {{ by_type['drug'][2].name }} | 规格：400mg/瓶 | 月采购量：{{ amounts[4] }} | 供应商：{{ by_type['distributor'][1].name }}
+  - {{ by_type['drug'][5].name }} | 规格：25mg/粒 | 月采购量：{{ amounts[5] }} | 供应商：{{ by_type['distributor'][0].name }}
+  - {{ by_type['drug'][6].name }} | 规格：200mg/瓶 | 月采购量：{{ amounts[6] }} | 供应商：{{ by_type['distributor'][2].name }}
+
+主要用药科室：{{ by_type['clinical_department'][0].name }}、{{ by_type['clinical_department'][1].name }}、{{ by_type['clinical_department'][3].name }}
+
+备注：{{ by_type['hospital'][0].name }}作为国家癌症中心依托单位，抗肿瘤药物使用量居全国前列。{{ by_type['drug'][0].name }}和{{ by_type['drug'][1].name }}是其肿瘤内科的核心用药。
+
+================================================================================
+
+二、上海瑞金医院
+
+医院名称：{{ by_type['hospital'][1].name }}
+医院等级：{{ by_type['hospital'][1].properties.get('level', '三甲') }}
+采购负责人：{{ by_type['person'][1].name }}（药学部副主任）
+
+采购药品清单：
+  - {{ by_type['drug'][0].name }} | 规格：100mg/支 | 月采购量：{{ amounts[1] }} | 供应商：{{ by_type['distributor'][0].name }}
+  - {{ by_type['drug'][2].name }} | 规格：400mg/瓶 | 月采购量：{{ amounts[2] }} | 供应商：{{ by_type['distributor'][1].name }}
+  - {{ by_type['drug'][3].name }} | 规格：10000IU/支 | 月采购量：{{ amounts[3] }} | 供应商：{{ by_type['distributor'][1].name }}
+  - {{ by_type['drug'][7].name }} | 规格：12mg/粒 | 月采购量：{{ amounts[4] }} | 供应商：{{ by_type['distributor'][3].name }}
+
+主要用药科室：{{ by_type['clinical_department'][0].name }}、{{ by_type['clinical_department'][4].name }}、{{ by_type['clinical_department'][5].name }}
+
+================================================================================
+
+三、中山大学肿瘤医院
+
+医院名称：{{ by_type['hospital'][2].name }}
+医院等级：{{ by_type['hospital'][2].properties.get('level', '三甲') }}
+
+采购药品清单：
+  - {{ by_type['drug'][0].name }} | 供应商：{{ by_type['distributor'][0].name }}
+  - {{ by_type['drug'][1].name }} | 供应商：{{ by_type['distributor'][0].name }}
+  - {{ by_type['drug'][4].name }} | 供应商：{{ by_type['distributor'][1].name }}
+  - {{ by_type['drug'][6].name }} | 供应商：{{ by_type['distributor'][2].name }}
+
+================================================================================
+
+四、四川大学华西医院
+
+医院名称：{{ by_type['hospital'][3].name }}
+
+采购药品清单：
+  - {{ by_type['drug'][0].name }} | 供应商：{{ by_type['distributor'][2].name }}
+  - {{ by_type['drug'][2].name }} | 供应商：{{ by_type['distributor'][1].name }}
+  - {{ by_type['drug'][5].name }} | 供应商：{{ by_type['distributor'][2].name }}
+  - {{ by_type['drug'][7].name }} | 供应商：{{ by_type['distributor'][3].name }}
+
+================================================================================
+
+五、复旦大学附属肿瘤医院
+
+医院名称：{{ by_type['hospital'][4].name }}
+
+采购药品清单：
+  - {{ by_type['drug'][0].name }} | 供应商：{{ by_type['distributor'][0].name }}
+  - {{ by_type['drug'][1].name }} | 供应商：{{ by_type['distributor'][0].name }}
+  - {{ by_type['drug'][3].name }} | 供应商：{{ by_type['distributor'][1].name }}
+  - {{ by_type['drug'][6].name }} | 供应商：{{ by_type['distributor'][2].name }}
+
+================================================================================
+
+六、浙江大学附属第一医院
+
+医院名称：{{ by_type['hospital'][5].name }}
+
+采购药品清单：
+  - {{ by_type['drug'][0].name }} | 供应商：{{ by_type['distributor'][0].name }}
+  - {{ by_type['drug'][2].name }} | 供应商：{{ by_type['distributor'][1].name }}
+  - {{ by_type['drug'][4].name }} | 供应商：{{ by_type['distributor'][1].name }}
+  - {{ by_type['drug'][7].name }} | 供应商：{{ by_type['distributor'][3].name }}
+
+================================================================================
+采购数据汇总日期：{{ dates[2] }}
