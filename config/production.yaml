@@ -1,0 +1,189 @@
+# GraphRAG-KG Production Configuration
+# Full-featured configuration for production deployments.
+# Uses best models, full extraction, and comprehensive settings.
+
+kg:
+  project_name: "graphrag-production"
+  description: "Production knowledge graph for comprehensive Q&A"
+
+  ingestion:
+    source_directories:
+      - "./documents"
+    file_patterns:
+      - "**/*.pdf"
+      - "**/*.md"
+      - "**/*.txt"
+      - "**/*.html"
+    recursive: true
+    encoding: "utf-8"
+    clean_html: true
+    extract_metadata: true
+    max_file_size_mb: 100
+
+  pipeline:
+    auto_index_on_ingest: true
+    incremental: true
+    backup_previous_output: true
+    max_workers: 4
+
+  query:
+    default_method: "drift"
+    response_type: "Multiple Paragraphs"
+    max_context_tokens: 24000
+    include_sources: true
+    streaming: true
+    cache_ttl_seconds: 7200
+
+  neo4j:
+    uri: "${NEO4J_URI:bolt://localhost:7687}"
+    username: "${NEO4J_USERNAME:neo4j}"
+    password: "${NEO4J_PASSWORD}"
+    database: "${NEO4J_DATABASE:neo4j}"
+    max_connection_pool_size: 100
+    sync_batch_size: 500
+    sync_create_indexes: true
+    store_embeddings: true
+
+  chat_model: "gpt-4.1"
+  chat_model_provider: "openai"
+  embedding_model: "text-embedding-3-large"
+  embedding_model_provider: "openai"
+  api_key: "${GRAPHRAG_API_KEY}"
+
+models:
+  default_chat_model:
+    type: litellm
+    model_provider: openai
+    model: gpt-4.1
+    api_key: "${GRAPHRAG_API_KEY}"
+    retry:
+      type: exponential_backoff
+      max_retries: 7
+      base_delay: 2.0
+  default_embedding_model:
+    type: litellm
+    model_provider: openai
+    model: text-embedding-3-large
+    api_key: "${GRAPHRAG_API_KEY}"
+    retry:
+      type: exponential_backoff
+      max_retries: 7
+
+input:
+  storage:
+    type: file
+    base_dir: "input"
+  type: text
+  encoding: "utf-8"
+  file_pattern: ".*\\.txt$"
+
+chunking:
+  type: tokens
+  encoding_model: cl100k_base
+  size: 1200
+  overlap: 100
+  prepend_metadata:
+    - title
+    - source
+
+output:
+  type: file
+  base_dir: "output"
+
+update_output_storage:
+  type: file
+  base_dir: "update_output"
+
+cache:
+  type: json
+  storage:
+    type: file
+    base_dir: "cache"
+
+reporting:
+  type: file
+  base_dir: "logs"
+
+vector_store:
+  type: lancedb
+  db_uri: "output/lancedb"
+
+extract_graph:
+  model_id: default_chat_model
+  prompt: "prompts/extract_graph.txt"
+  entity_types:
+    - organization
+    - person
+    - location
+    - event
+    - concept
+    - technology
+    - product
+  max_gleanings: 2
+
+summarize_descriptions:
+  model_id: default_chat_model
+  prompt: "prompts/summarize_descriptions.txt"
+  max_length: 500
+  max_input_length: 4000
+
+community_reports:
+  model_id: default_chat_model
+  graph_prompt: "prompts/community_report_graph.txt"
+  text_prompt: "prompts/community_report_text.txt"
+  max_length: 2000
+  max_input_length: 8000
+
+embed_text:
+  model_id: default_embedding_model
+  batch_size: 16
+  batch_max_tokens: 8192
+
+cluster_graph:
+  max_cluster_size: 10
+  use_lcc: true
+  seed: 42
+
+snapshots:
+  embeddings: true
+  graphml: true
+  raw_graph: false
+
+extract_claims:
+  enabled: true
+
+local_search:
+  prompt: "prompts/local_search.txt"
+  model_id: default_chat_model
+  embedding_model_id: default_embedding_model
+  text_unit_prop: 0.5
+  community_prop: 0.15
+  top_k_entities: 10
+  top_k_relationships: 10
+  max_context_tokens: 12000
+
+global_search:
+  map_prompt: "prompts/global_search_map.txt"
+  reduce_prompt: "prompts/global_search_reduce.txt"
+  model_id: default_chat_model
+  data_max_tokens: 12000
+  map_max_length: 1000
+  reduce_max_length: 2000
+
+drift_search:
+  prompt: "prompts/drift_search.txt"
+  reduce_prompt: "prompts/drift_reduce.txt"
+  model_id: default_chat_model
+  embedding_model_id: default_embedding_model
+  data_max_tokens: 12000
+  reduce_max_tokens: 2000
+  concurrency: 4
+  drift_k_followups: 20
+  n_depth: 3
+
+basic_search:
+  prompt: "prompts/basic_search.txt"
+  model_id: default_chat_model
+  embedding_model_id: default_embedding_model
+  k: 10
+  max_context_tokens: 12000

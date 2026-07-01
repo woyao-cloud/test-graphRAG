@@ -1,0 +1,140 @@
+# GraphRAG-KG Default Configuration
+# Full-featured configuration for general-purpose knowledge graph Q&A.
+# Copy to your project root as settings.yaml and customize.
+
+kg:
+  project_name: "my-knowledge-graph"
+  description: "GraphRAG knowledge graph for Q&A"
+
+  ingestion:
+    source_directories:
+      - "./documents"
+    file_patterns:
+      - "**/*.pdf"
+      - "**/*.md"
+      - "**/*.txt"
+      - "**/*.html"
+    recursive: true
+    encoding: "utf-8"
+    clean_html: true
+    extract_metadata: true
+    max_file_size_mb: 50
+
+  pipeline:
+    auto_index_on_ingest: false
+    incremental: false
+    backup_previous_output: true
+    max_workers: 4
+
+  query:
+    default_method: "local"
+    response_type: "Multiple Paragraphs"
+    max_context_tokens: 12000
+    include_sources: true
+    streaming: false
+    cache_ttl_seconds: 3600
+
+  neo4j:
+    uri: "${NEO4J_URI:bolt://localhost:7687}"
+    username: "${NEO4J_USERNAME:neo4j}"
+    password: "${NEO4J_PASSWORD:password}"
+    database: "${NEO4J_DATABASE:neo4j}"
+    sync_batch_size: 1000
+    sync_create_indexes: true
+    store_embeddings: false
+
+  chat_model: "${GRAPHRAG_CHAT_MODEL:gpt-4.1}"
+  chat_model_provider: "openai"
+  embedding_model: "${GRAPHRAG_EMBEDDING_MODEL:text-embedding-3-large}"
+  embedding_model_provider: "openai"
+  api_key: "${GRAPHRAG_API_KEY}"
+  api_base: "${GRAPHRAG_API_BASE:}"
+
+models:
+  default_chat_model:
+    type: litellm
+    model_provider: openai
+    model: gpt-4.1
+    api_key: "${GRAPHRAG_API_KEY}"
+  default_embedding_model:
+    type: litellm
+    model_provider: openai
+    model: text-embedding-3-large
+    api_key: "${GRAPHRAG_API_KEY}"
+
+input:
+  storage:
+    type: file
+    base_dir: "input"
+  type: text
+  encoding: "utf-8"
+  file_pattern: ".*\\.txt$"
+
+chunking:
+  type: tokens
+  encoding_model: cl100k_base
+  size: 1200
+  overlap: 100
+
+output:
+  type: file
+  base_dir: "output"
+
+cache:
+  type: json
+  storage:
+    type: file
+    base_dir: "cache"
+
+reporting:
+  type: file
+  base_dir: "logs"
+
+vector_store:
+  type: lancedb
+  db_uri: "output/lancedb"
+
+extract_graph:
+  model_id: default_chat_model
+  prompt: "prompts/extract_graph.txt"
+  entity_types:
+    - organization
+    - person
+    - location
+    - event
+    - concept
+  max_gleanings: 1
+
+summarize_descriptions:
+  model_id: default_chat_model
+  prompt: "prompts/summarize_descriptions.txt"
+  max_length: 500
+
+community_reports:
+  model_id: default_chat_model
+  graph_prompt: "prompts/community_report_graph.txt"
+  text_prompt: "prompts/community_report_text.txt"
+  max_length: 2000
+
+embed_text:
+  model_id: default_embedding_model
+
+cluster_graph:
+  max_cluster_size: 10
+
+snapshots:
+  graphml: true
+
+local_search:
+  prompt: "prompts/local_search.txt"
+
+global_search:
+  map_prompt: "prompts/global_search_map.txt"
+  reduce_prompt: "prompts/global_search_reduce.txt"
+
+drift_search:
+  prompt: "prompts/drift_search.txt"
+  reduce_prompt: "prompts/drift_reduce.txt"
+
+basic_search:
+  prompt: "prompts/basic_search.txt"
