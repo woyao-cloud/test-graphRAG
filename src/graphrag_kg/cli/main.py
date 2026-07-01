@@ -13,6 +13,7 @@ import typer
 
 from graphrag_kg import __version__
 from graphrag_kg.cli.commands.data_cmd import data_app
+from graphrag_kg.cli.commands.ingest_cmd import ingest_app
 
 app = typer.Typer(
     name="graphrag-kg",
@@ -23,10 +24,10 @@ app = typer.Typer(
 
 # Register subcommands
 app.add_typer(data_app, name="data", help="Test data generation and ground truth management")
+app.add_typer(ingest_app, name="ingest", help="Document ingestion commands")
 
-# Future commands (Phases 1-5):
+# Future commands (Phases 3-5):
 # app.add_typer(init_app, name="init")
-# app.add_typer(ingest_app, name="ingest")
 # app.add_typer(index_app, name="index")
 # app.add_typer(graph_app, name="graph")
 # app.add_typer(query_app, name="query")
