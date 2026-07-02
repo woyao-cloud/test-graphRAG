@@ -104,13 +104,13 @@ class TestKGConfig:
 
     def test_to_graphrag_config(self, default_config):
         graphrag_config = default_config.to_graphrag_config()
-        assert "models" in graphrag_config
-        assert "input" in graphrag_config
-        assert "output" in graphrag_config
-        assert "vector_store" in graphrag_config
-        assert graphrag_config["vector_store"]["type"] == "lancedb"
-        assert "default_chat_model" in graphrag_config["models"]
-        assert graphrag_config["models"]["default_chat_model"]["model"] == "gpt-4.1"
+        # graphrag 3.x returns a GraphRagConfig Pydantic model
+        assert graphrag_config is not None
+        assert hasattr(graphrag_config, 'completion_models')
+        assert hasattr(graphrag_config, 'embedding_models')
+        assert hasattr(graphrag_config, 'input')
+        assert hasattr(graphrag_config, 'vector_store')
+        assert 'default_completion_model' in graphrag_config.completion_models
 
     def test_project_name_validation(self):
         with pytest.raises(ValidationError):

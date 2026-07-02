@@ -46,9 +46,13 @@ def ask(
     ),
 ) -> None:
     """Ask a question and get a grounded answer with citations."""
+    # Load .env first
+    from graphrag_kg.utils.env import load_dotenv
+    load_dotenv()
+
     # Load config
     loader = ConfigLoader(config_path)
-    config = loader.load(config_path) if config_path else KGConfig()
+    config = loader.load(config_path) if config_path else loader.load()
 
     print_header("GraphRAG Q&A")
     print_info(f"Question: {question}")

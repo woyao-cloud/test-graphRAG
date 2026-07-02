@@ -301,53 +301,84 @@ class KGConfig(BaseModel):
                 object.__setattr__(self, field_name, (root / value).resolve())
         return self
 
-    def to_graphrag_config(self) -> dict[str, Any]:
-        """Generate graphrag-compatible configuration dict.
+    def to_graphrag_config(self) -> Any:
+        """Generate a graphrag 3.x GraphRagConfig object.
 
-        Merges our config model with graphrag's native settings format.
+        Uses the installed graphrag library's config model directly.
         """
-        graphrag = {
-            "models": {
-                "default_chat_model": {
-                    "type": "litellm",
-                    "model_provider": self.chat_model_provider,
-                    "model": self.chat_model,
-                    "api_key": self.api_key or "${GRAPHRAG_API_KEY}",
-                },
-                "default_embedding_model": {
-                    "type": "litellm",
-                    "model_provider": self.embedding_model_provider,
-                    "model": self.embedding_model,
-                    "api_key": self.api_key or "${GRAPHRAG_API_KEY}",
-                },
-            },
-            "input": {
-                "storage": {"type": "file", "base_dir": str(self.input_dir)},
-                "type": "text",
-                "encoding": self.ingestion.encoding,
-                "file_pattern": ".*\\.txt$",
-            },
-            "output": {
-                "type": "file",
-                "base_dir": str(self.output_dir),
-            },
-            "cache": {
-                "type": "json",
-                "storage": {"type": "file", "base_dir": str(self.cache_dir)},
-            },
-            "reporting": {
-                "type": "file",
-                "base_dir": str(self.logs_dir),
-            },
-            "vector_store": {
-                "type": "lancedb",
-                "db_uri": str(self.output_dir / "lancedb"),
-            },
+        import os
+        from graphrag.config.models.graph_rag_config import GraphRagConfig
+        from graphrag_llm.config.model_config import ModelConfig
+        from graphrag_input.input_config import InputConfig
+        from graphrag_storage.storage_config import StorageConfig, StorageType
+        from graphrag_vectors.vector_store_config import VectorStoreConfig, VectorStoreType
+        from graphrag.config.models.reporting_config import ReportingConfig
+        from graphrag_cache.cache_config import CacheConfig
+
+        api_key = self.api_key or os.environ.get("GRAPHRAG_API_KEY", "") or None
+        api_base = self.api_base or os.environ.get("GRAPHRAG_API_BASE", "") or None
+
+        # Determine model string for LiteLLM
+        # For non-OpenAI providers, use "provider/model" format
+        chat_model_str = self.chat_model
+        if self.chat_model_provider not in ("openai", ""):
+            chat_model_str = f"openai/{self.chat_model}"
+
+        # Build model configs
+        completion_models = {
+            "default_completion_model": ModelConfig(
+                type="litellm",
+                model_provider=self.chat_model_provider,
+                model=chat_model_str,
+                api_key=api_key,
+                api_base=api_base,
+            ),
+        }
+        embedding_models = {
+            "default_embedding_model": ModelConfig(
+                type="litellm",
+                model_provider=self.embedding_model_provider,
+                model=self.embedding_model,
+                api_key=api_key,
+                api_base=api_base,
+            ),
         }
 
-        # Merge any user-provided graphrag overrides
-        graphrag.update(self.graphrag_settings)
-        return graphrag
+        # Build GraphRagConfig
+        config = GraphRagConfig(
+            completion_models=completion_models,
+            embedding_models=embedding_models,
+            input=InputConfig(
+                type="text",
+                encoding=self.ingestion.encoding,
+                file_pattern=".*\\.txt$",
+            ),
+            input_storage=StorageConfig(
+                type=StorageType.File,
+                base_dir=str(self.input_dir),
+            ),
+            output_storage=StorageConfig(
+                type=StorageType.File,
+                base_dir=str(self.output_dir),
+            ),
+            cache=CacheConfig(
+                type="json",
+                storage=StorageConfig(
+                    type=StorageType.File,
+                    base_dir=str(self.cache_dir),
+                ),
+            ),
+            reporting=ReportingConfig(
+                type="file",
+                base_dir=str(self.logs_dir),
+            ),
+            vector_store=VectorStoreConfig(
+                type=VectorStoreType.LanceDB,
+                db_uri=str(self.output_dir / "lancedb"),
+            ),
+        )
+
+        return config
 
     @classmethod
     def defaults(cls) -> "KGConfig":

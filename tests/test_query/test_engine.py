@@ -45,10 +45,13 @@ class TestQueryEngine:
         """Unclassified questions should default to local."""
         assert engine._auto_route("Tell me about the company's products") == "local"
 
-    def test_fallback_answer(self, engine):
-        answer = engine._fallback_answer("test question", "local")
-        assert "LOCAL SEARCH NOT AVAILABLE" in answer
-        assert "test question" in answer
+    def test_ask_without_index(self, engine):
+        """ask() should return error response when no index exists."""
+        response = engine.ask("test question", method="local")
+        assert response is not None
+        assert response.search_method == "local"
+        # Should contain error info since no index
+        assert "error" in response.answer.lower() or "search error" in response.answer.lower()
 
     def test_get_stats(self, engine):
         stats = engine.get_stats()

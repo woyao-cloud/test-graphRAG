@@ -1,4 +1,9 @@
-"""CLI commands for project initialization."""
+"""CLI command for project initialization.
+
+Usage:
+    graphrag-kg init --name my-project
+    graphrag-kg init --name my-kg --root ./my-dir --force
+"""
 
 from __future__ import annotations
 
@@ -10,10 +15,7 @@ import typer
 from graphrag_kg.cli.utils import print_error, print_header, print_info, print_success
 from graphrag_kg.core.project import ProjectManager
 
-init_app = typer.Typer(help="Project initialization commands")
 
-
-@init_app.command("init")
 def init_project(
     name: str = typer.Option(
         "my-knowledge-graph", "--name", "-n",
@@ -32,7 +34,11 @@ def init_project(
         help="Overwrite existing project files",
     ),
 ) -> None:
-    """Initialize a new GraphRAG-KG project."""
+    """Initialize a new GraphRAG-KG project.
+
+    Creates the full project directory structure with settings.yaml,
+    docker-compose.yml, .env, and all required subdirectories.
+    """
     project_dir = (root or Path.cwd()).resolve()
 
     print_header(f"Initializing GraphRAG-KG Project: {name}")

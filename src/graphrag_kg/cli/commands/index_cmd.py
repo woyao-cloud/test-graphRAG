@@ -43,9 +43,13 @@ def index(
     ),
 ) -> None:
     """Build the knowledge graph index from ingested documents."""
+    # Load .env first so env vars are available
+    from graphrag_kg.utils.env import load_dotenv
+    load_dotenv()
+
     # Load config
     loader = ConfigLoader(config_path)
-    config = loader.load(config_path) if config_path else KGConfig()
+    config = loader.load(config_path) if config_path else loader.load()
 
     print_header(f"GraphRAG Indexing: {method}")
 

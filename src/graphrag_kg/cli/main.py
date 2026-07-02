@@ -14,7 +14,7 @@ import typer
 from graphrag_kg import __version__
 from graphrag_kg.cli.commands.data_cmd import data_app
 from graphrag_kg.cli.commands.ingest_cmd import ingest_app
-from graphrag_kg.cli.commands.init_cmd import init_app
+from graphrag_kg.cli.commands.init_cmd import init_project
 from graphrag_kg.cli.commands.index_cmd import index_app
 from graphrag_kg.cli.commands.graph_cmd import graph_app
 from graphrag_kg.cli.commands.query_cmd import query_app
@@ -30,7 +30,7 @@ app = typer.Typer(
 
 # Register subcommands
 app.add_typer(data_app, name="data", help="Test data generation and ground truth management")
-app.add_typer(init_app, name="init", help="Initialize a new GraphRAG-KG project")
+app.command("init", help="Initialize a new GraphRAG-KG project")(init_project)
 app.add_typer(ingest_app, name="ingest", help="Document ingestion commands")
 app.add_typer(index_app, name="index", help="Knowledge graph indexing commands")
 app.add_typer(graph_app, name="graph", help="Neo4j graph management commands")

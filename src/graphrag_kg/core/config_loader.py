@@ -151,24 +151,38 @@ class ConfigLoader:
     # ------------------------------------------------------------------
 
     def _build_config(self) -> KGConfig:
-        """Build a KGConfig from raw YAML data."""
+        """Build a KGConfig from raw YAML data and environment variables."""
+        import os as _os
+
+        # Read from env vars (used when no YAML config is present)
+        env_chat = _os.environ.get("GRAPHRAG_CHAT_MODEL", "")
+        env_embed = _os.environ.get("GRAPHRAG_EMBEDDING_MODEL", "")
+        env_key = _os.environ.get("GRAPHRAG_API_KEY", "")
+        env_base = _os.environ.get("GRAPHRAG_API_BASE", "")
+
         if not self._raw_data:
-            return KGConfig()
+            return KGConfig(
+                chat_model=env_chat or "gpt-4.1",
+                embedding_model=env_embed or "text-embedding-3-large",
+                api_key=env_key,
+                api_base=env_base,
+            )
 
         try:
             # Extract our kg section if present
             kg_data = self._raw_data.get("kg", {})
 
             # Build config with Pydantic validation
+            # YAML values take priority, fall back to env vars, then defaults
             config = KGConfig(
                 project_name=kg_data.get("project_name", "my-knowledge-graph"),
                 description=kg_data.get("description", ""),
-                chat_model=kg_data.get("chat_model", "gpt-4.1"),
+                chat_model=kg_data.get("chat_model") or env_chat or "gpt-4.1",
                 chat_model_provider=kg_data.get("chat_model_provider", "openai"),
-                embedding_model=kg_data.get("embedding_model", "text-embedding-3-large"),
+                embedding_model=kg_data.get("embedding_model") or env_embed or "text-embedding-3-large",
                 embedding_model_provider=kg_data.get("embedding_model_provider", "openai"),
-                api_key=kg_data.get("api_key", ""),
-                api_base=kg_data.get("api_base", ""),
+                api_key=kg_data.get("api_key") or env_key,
+                api_base=kg_data.get("api_base") or env_base,
             )
 
             # Apply sub-configs
