@@ -44,18 +44,20 @@ kg:
     sync_create_indexes: true
     store_embeddings: true
 
-  chat_model: "gpt-4.1"
-  chat_model_provider: "openai"
-  embedding_model: "text-embedding-3-large"
-  embedding_model_provider: "openai"
+  chat_model: "${GRAPHRAG_CHAT_MODEL:gpt-4.1}"
+  chat_model_provider: "${GRAPHRAG_CHAT_MODEL_PROVIDER:openai}"
+  embedding_model: "${GRAPHRAG_EMBEDDING_MODEL:text-embedding-3-large}"
+  embedding_model_provider: "${GRAPHRAG_EMBEDDING_MODEL_PROVIDER:openai}"
   api_key: "${GRAPHRAG_API_KEY}"
+  api_base: "${GRAPHRAG_API_BASE:}"
 
 models:
   default_chat_model:
     type: litellm
     model_provider: openai
-    model: gpt-4.1
+    model: "${GRAPHRAG_CHAT_MODEL:gpt-4.1}"
     api_key: "${GRAPHRAG_API_KEY}"
+    api_base: "${GRAPHRAG_API_BASE:}"
     retry:
       type: exponential_backoff
       max_retries: 7
@@ -63,8 +65,9 @@ models:
   default_embedding_model:
     type: litellm
     model_provider: openai
-    model: text-embedding-3-large
+    model: "${GRAPHRAG_EMBEDDING_MODEL:text-embedding-3-large}"
     api_key: "${GRAPHRAG_API_KEY}"
+    api_base: "${GRAPHRAG_API_BASE:}"
     retry:
       type: exponential_backoff
       max_retries: 7

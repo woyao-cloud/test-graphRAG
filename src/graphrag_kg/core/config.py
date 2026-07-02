@@ -324,19 +324,21 @@ class KGConfig(BaseModel):
 
         # Determine model string for LiteLLM
         # When api_base is set (non-OpenAI endpoint), use "openai/model" format
+        # For Ollama (localhost), use model name as-is with /v1 endpoint
+        # For other non-OpenAI endpoints (DeepSeek etc), use openai/ prefix
+        is_ollama = "localhost" in (api_base or "") or "127.0.0.1" in (api_base or "")
         chat_model_str = self.chat_model
-        if api_base and "api.openai.com" not in api_base and not chat_model_str.startswith("openai/"):
+        if api_base and "api.openai.com" not in api_base and "/" not in chat_model_str and not is_ollama:
             chat_model_str = f"openai/{self.chat_model}"
 
+        is_ollama_embed = "localhost" in (embed_api_base or "") or "127.0.0.1" in (embed_api_base or "")
         embed_model_str = self.embedding_model
-        if embed_api_base and "api.openai.com" not in embed_api_base and "/" not in embed_model_str:
-            # Detect provider prefix: ollama for localhost, openai for others
-            prefix = "ollama" if ("localhost" in embed_api_base or "127.0.0.1" in embed_api_base) else "openai"
-            embed_model_str = f"{prefix}/{self.embedding_model}"
+        if embed_api_base and "api.openai.com" not in embed_api_base and "/" not in embed_model_str and not is_ollama_embed:
+            embed_model_str = f"openai/{self.embedding_model}"
 
-        # Strip /v1 suffix from API bases (LiteLLM appends it automatically)
-        chat_api_base = api_base.rstrip("/v1").rstrip("/") if api_base else None
-        embed_api_base_clean = embed_api_base.rstrip("/v1").rstrip("/") if embed_api_base else None
+        # For Ollama, add /v1 for OpenAI-compatible endpoint
+        chat_api_base = (api_base.rstrip("/") + "/v1") if (is_ollama and api_base and "/v1" not in api_base) else api_base
+        embed_api_base_clean = (embed_api_base.rstrip("/") + "/v1") if (is_ollama_embed and embed_api_base and "/v1" not in embed_api_base) else embed_api_base
 
         # Build model configs
         completion_models = {
@@ -389,10 +391,28 @@ class KGConfig(BaseModel):
             vector_store=VectorStoreConfig(
                 type=VectorStoreType.LanceDB,
                 db_uri=str(self.output_dir / "lancedb"),
+                vector_size=self._get_vector_size(),
             ),
         )
 
         return config
+
+    def _get_vector_size(self) -> int:
+        """Determine vector dimension based on embedding model."""
+        model = self.embedding_model.lower()
+        if "bge" in model:
+            if "bge-m3" in model or "bge-large" in model:
+                return 1024
+            return 768  # bge-base, bge-small
+        if "nomic" in model:
+            return 768
+        if "minilm" in model or "all-minilm" in model:
+            return 384
+        if "ada" in model or "3-small" in model:
+            return 1536
+        if "3-large" in model:
+            return 3072
+        return 3072  # Default for OpenAI
 
     @classmethod
     def defaults(cls) -> "KGConfig":

@@ -174,15 +174,19 @@ class ConfigLoader:
 
             # Build config with Pydantic validation
             # YAML values take priority, fall back to env vars, then defaults
+            # Priority: env vars > YAML values > hardcoded defaults.
+            # This allows .env to override settings.yaml for model configuration.
             config = KGConfig(
                 project_name=kg_data.get("project_name", "my-knowledge-graph"),
                 description=kg_data.get("description", ""),
-                chat_model=kg_data.get("chat_model") or env_chat or "gpt-4.1",
-                chat_model_provider=kg_data.get("chat_model_provider", "openai"),
-                embedding_model=kg_data.get("embedding_model") or env_embed or "text-embedding-3-large",
-                embedding_model_provider=kg_data.get("embedding_model_provider", "openai"),
-                api_key=kg_data.get("api_key") or env_key,
-                api_base=kg_data.get("api_base") or env_base,
+                chat_model=env_chat or kg_data.get("chat_model") or "gpt-4.1",
+                chat_model_provider=os.environ.get("GRAPHRAG_CHAT_MODEL_PROVIDER")
+                    or kg_data.get("chat_model_provider", "openai"),
+                embedding_model=env_embed or kg_data.get("embedding_model") or "text-embedding-3-large",
+                embedding_model_provider=os.environ.get("GRAPHRAG_EMBEDDING_MODEL_PROVIDER")
+                    or kg_data.get("embedding_model_provider", "openai"),
+                api_key=env_key or kg_data.get("api_key") or "",
+                api_base=env_base or kg_data.get("api_base") or "",
             )
 
             # Apply sub-configs

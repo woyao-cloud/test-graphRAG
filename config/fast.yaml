@@ -38,23 +38,26 @@ kg:
     sync_create_indexes: false
     store_embeddings: false
 
-  chat_model: "gpt-4.1-mini"
-  chat_model_provider: "openai"
-  embedding_model: "text-embedding-3-small"
-  embedding_model_provider: "openai"
+  chat_model: "${GRAPHRAG_CHAT_MODEL:gpt-4.1-mini}"
+  chat_model_provider: "${GRAPHRAG_CHAT_MODEL_PROVIDER:openai}"
+  embedding_model: "${GRAPHRAG_EMBEDDING_MODEL:text-embedding-3-small}"
+  embedding_model_provider: "${GRAPHRAG_EMBEDDING_MODEL_PROVIDER:openai}"
   api_key: "${GRAPHRAG_API_KEY}"
+  api_base: "${GRAPHRAG_API_BASE:}"
 
 models:
   default_chat_model:
     type: litellm
     model_provider: openai
-    model: gpt-4.1-mini
+    model: "${GRAPHRAG_CHAT_MODEL:gpt-4.1-mini}"
     api_key: "${GRAPHRAG_API_KEY}"
+    api_base: "${GRAPHRAG_API_BASE:}"
   default_embedding_model:
     type: litellm
     model_provider: openai
-    model: text-embedding-3-small
+    model: "${GRAPHRAG_EMBEDDING_MODEL:text-embedding-3-small}"
     api_key: "${GRAPHRAG_API_KEY}"
+    api_base: "${GRAPHRAG_API_BASE:}"
 
 input:
   storage:
