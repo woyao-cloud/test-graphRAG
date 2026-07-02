@@ -218,15 +218,18 @@ class Neo4jGraphSync:
                 records = []
                 for _, row in batch.iterrows():
                     props = self._row_to_props(row)
+                    # Community ID can be UUID string or integer
+                    raw_id = props.pop("id", props.pop("community", 0))
+                    comm_id = str(raw_id)  # Neo4j can store string or int for MERGE
                     records.append({
-                        "id": int(props.pop("id", props.pop("community", 0))),
-                        "title": str(props.pop("title", f"Community {props.get('id', '?')}")),
+                        "id": comm_id,
+                        "title": str(props.pop("title", f"Community {comm_id}")),
                         "level": int(props.pop("level", 0)),
                         "summary": str(props.pop("summary", "")),
                         "full_content": str(props.pop("full_content", "")),
                         "rating": float(props.pop("rating", props.pop("rank", 0.0))),
                         "entity_count": int(props.pop("entity_count", props.pop("size", 0))),
-                        "parent_community_id": int(props.pop("parent_community_id", -1)),
+                        "parent_community_id": str(props.pop("parent_community_id", -1)),
                     })
 
                 result = session.run(
@@ -341,7 +344,7 @@ class Neo4jGraphSync:
                 records = []
                 for _, row in batch.iterrows():
                     props = self._row_to_props(row)
-                    community_id = int(props.pop("community", props.pop("id", -1)))
+                    community_id = str(props.pop("community", props.pop("id", -1)))
                     records.append({
                         "community_id": community_id,
                         "title": str(props.pop("title", "")),
@@ -383,11 +386,15 @@ class Neo4jGraphSync:
         }
 
     def _to_list(self, value: Any) -> list:
-        """Convert a value to a list safely."""
+        """Convert a value to a list safely (handles numpy arrays)."""
         if value is None:
             return []
         if isinstance(value, list):
             return value
+        # Handle numpy arrays and pandas Series
+        if hasattr(value, "tolist"):
+            result = value.tolist()
+            return result if isinstance(result, list) else [result]
         if isinstance(value, str):
             try:
                 import json

@@ -318,29 +318,43 @@ class KGConfig(BaseModel):
         api_key = self.api_key or os.environ.get("GRAPHRAG_API_KEY", "") or None
         api_base = self.api_base or os.environ.get("GRAPHRAG_API_BASE", "") or None
 
+        # Separate config for embedding model (may use different provider)
+        embed_api_key = os.environ.get("GRAPHRAG_API_KEY_EMBED") or api_key
+        embed_api_base = os.environ.get("GRAPHRAG_API_BASE_EMBED") or api_base or None
+
         # Determine model string for LiteLLM
-        # For non-OpenAI providers, use "provider/model" format
+        # When api_base is set (non-OpenAI endpoint), use "openai/model" format
         chat_model_str = self.chat_model
-        if self.chat_model_provider not in ("openai", ""):
+        if api_base and "api.openai.com" not in api_base and not chat_model_str.startswith("openai/"):
             chat_model_str = f"openai/{self.chat_model}"
+
+        embed_model_str = self.embedding_model
+        if embed_api_base and "api.openai.com" not in embed_api_base and "/" not in embed_model_str:
+            # Detect provider prefix: ollama for localhost, openai for others
+            prefix = "ollama" if ("localhost" in embed_api_base or "127.0.0.1" in embed_api_base) else "openai"
+            embed_model_str = f"{prefix}/{self.embedding_model}"
+
+        # Strip /v1 suffix from API bases (LiteLLM appends it automatically)
+        chat_api_base = api_base.rstrip("/v1").rstrip("/") if api_base else None
+        embed_api_base_clean = embed_api_base.rstrip("/v1").rstrip("/") if embed_api_base else None
 
         # Build model configs
         completion_models = {
             "default_completion_model": ModelConfig(
                 type="litellm",
-                model_provider=self.chat_model_provider,
+                model_provider="openai",
                 model=chat_model_str,
                 api_key=api_key,
-                api_base=api_base,
+                api_base=chat_api_base,
             ),
         }
         embedding_models = {
             "default_embedding_model": ModelConfig(
                 type="litellm",
-                model_provider=self.embedding_model_provider,
-                model=self.embedding_model,
-                api_key=api_key,
-                api_base=api_base,
+                model_provider="openai",
+                model=embed_model_str,
+                api_key=embed_api_key,
+                api_base=embed_api_base_clean,
             ),
         }
 
