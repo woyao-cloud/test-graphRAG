@@ -434,3 +434,7 @@ D:\claude-code-project\graphRAG>graphrag-kg index run --method standard
 [OK] Indexing complete!
 
 D:\claude-code-project\graphRAG>graphrag-kg query ask "恒瑞医药生产哪些药品？"
+
+graphrag-kg query ask "注射用紫杉醇的完整供应链是怎样的？" 
+graphrag-kg query ask "北京协和医院使用哪些制药公司的药品？"
+graphrag-kg query ask "如果紫杉醇供应中断会影响哪些医院？" --method drift
