@@ -325,16 +325,13 @@ class KGConfig(BaseModel):
         # Determine model string for LiteLLM
         # When api_base is set (non-OpenAI endpoint), use "openai/model" format
         # For Ollama (localhost), use model name as-is with /v1 endpoint
-        # For other non-OpenAI endpoints (DeepSeek etc), use openai/ prefix
+        # For other non-OpenAI endpoints (DeepSeek etc), use model name as-is
+        # (no openai/ prefix — DeepSeek's API doesn't support it)
         is_ollama = "localhost" in (api_base or "") or "127.0.0.1" in (api_base or "")
         chat_model_str = self.chat_model
-        if api_base and "api.openai.com" not in api_base and "/" not in chat_model_str and not is_ollama:
-            chat_model_str = f"openai/{self.chat_model}"
 
         is_ollama_embed = "localhost" in (embed_api_base or "") or "127.0.0.1" in (embed_api_base or "")
         embed_model_str = self.embedding_model
-        if embed_api_base and "api.openai.com" not in embed_api_base and "/" not in embed_model_str and not is_ollama_embed:
-            embed_model_str = f"openai/{self.embedding_model}"
 
         # For Ollama, add /v1 for OpenAI-compatible endpoint
         chat_api_base = (api_base.rstrip("/") + "/v1") if (is_ollama and api_base and "/v1" not in api_base) else api_base
