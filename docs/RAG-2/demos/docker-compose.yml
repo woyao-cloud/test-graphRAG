@@ -1,0 +1,142 @@
+version: '3.8'
+
+# RAG 实战指南 — Demo 运行环境
+# 使用方法:
+#   docker compose build          # 构建所有镜像
+#   docker compose run --rm ch02-basic-rag   # 运行单个 demo
+#   docker compose run --rm ch07-multi-recall # 运行多路召回 demo
+
+services:
+  # ============================================================
+  # Ch2: 基础 RAG Pipeline
+  # ============================================================
+  ch02-basic-rag:
+    build:
+      context: ./ch02-basic-rag
+      dockerfile: Dockerfile
+    container_name: rag-demo-basic
+    working_dir: /app
+    volumes:
+      - ./ch02-basic-rag:/app
+    command: python main.py
+
+  # ============================================================
+  # Ch4: 文档处理管线
+  # ============================================================
+  ch04-doc-processing:
+    build:
+      context: ./ch04-doc-processing
+      dockerfile: Dockerfile
+    container_name: rag-demo-doc
+    working_dir: /app
+    volumes:
+      - ./ch04-doc-processing:/app
+    command: python main.py
+
+  # ============================================================
+  # Ch7: 多路召回管线
+  # ============================================================
+  ch07-multi-recall:
+    build:
+      context: ./ch07-multi-recall
+      dockerfile: Dockerfile
+    container_name: rag-demo-recall
+    working_dir: /app
+    volumes:
+      - ./ch07-multi-recall:/app
+    command: python main.py
+
+  # ============================================================
+  # Ch9: 知识图谱检索
+  # ============================================================
+  ch09-kg-retrieval:
+    build:
+      context: ./ch09-kg-retrieval
+      dockerfile: Dockerfile
+    container_name: rag-demo-kg
+    working_dir: /app
+    volumes:
+      - ./ch09-kg-retrieval:/app
+    command: python main.py
+
+  # ============================================================
+  # Ch10: GraphRAG + DeepSeek
+  # ============================================================
+  ch10-graphrag:
+    build:
+      context: ./ch10-graphrag
+      dockerfile: Dockerfile
+    container_name: rag-demo-graphrag
+    working_dir: /app
+    volumes:
+      - ./ch10-graphrag:/app
+    environment:
+      - GRAPHRAG_API_KEY=${GRAPHRAG_API_KEY:-}
+      - GRAPHRAG_CHAT_MODEL=${GRAPHRAG_CHAT_MODEL:-deepseek-chat}
+      - GRAPHRAG_API_BASE=${GRAPHRAG_API_BASE:-https://api.deepseek.com/v1}
+    command: python main.py
+
+  # ============================================================
+  # Ch11: 混合检索
+  # ============================================================
+  ch11-hybrid-search:
+    build:
+      context: ./ch11-hybrid-search
+      dockerfile: Dockerfile
+    container_name: rag-demo-hybrid
+    working_dir: /app
+    volumes:
+      - ./ch11-hybrid-search:/app
+    command: python main.py --query "抗肿瘤药物"
+
+  # ============================================================
+  # Ch12: Agentic RAG
+  # ============================================================
+  ch12-agentic-rag:
+    build:
+      context: ./ch12-agentic-rag
+      dockerfile: Dockerfile
+    container_name: rag-demo-agent
+    working_dir: /app
+    volumes:
+      - ./ch12-agentic-rag:/app
+    command: python main.py
+
+  # ============================================================
+  # Ch14: 性能与内存管理
+  # ============================================================
+  ch14-performance:
+    build:
+      context: ./ch14-performance
+      dockerfile: Dockerfile
+    container_name: rag-demo-perf
+    working_dir: /app
+    volumes:
+      - ./ch14-performance:/app
+    command: python main.py
+
+  # ============================================================
+  # Ch15: 评估体系
+  # ============================================================
+  ch15-evaluation:
+    build:
+      context: ./ch15-evaluation
+      dockerfile: Dockerfile
+    container_name: rag-demo-eval
+    working_dir: /app
+    volumes:
+      - ./ch15-evaluation:/app
+    command: python main.py
+
+  # ============================================================
+  # Ch18: 端到端 RAG
+  # ============================================================
+  ch18-e2e-rag:
+    build:
+      context: ./ch18-e2e-rag
+      dockerfile: Dockerfile
+    container_name: rag-demo-e2e
+    working_dir: /app
+    volumes:
+      - ./ch18-e2e-rag:/app
+    command: python main.py
