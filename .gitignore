@@ -22,7 +22,7 @@ env/
 # Environment
 .env
 .env.local
-
+java/.gradle/*
 # GraphRAG output
 output/
 input/
