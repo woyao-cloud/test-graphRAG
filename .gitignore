@@ -49,6 +49,6 @@ coverage.xml
 
 # MyPy
 .mypy_cache/
-
+volumes/*
 # Ruff
 .ruff_cache/
