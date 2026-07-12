@@ -58,6 +58,24 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  milvus:
+    image: milvusdb/milvus:latest
+    container_name: graphrag-kg-milvus
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    environment:
+      - TZ=UTC
+    volumes:
+      - milvus_data:/var/lib/milvus
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 19530 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
 volumes:
   neo4j_data:
     driver: local
@@ -183,8 +201,15 @@ reporting:
   base_dir: "logs"
 
 vector_store:
-  type: lancedb
-  db_uri: "output/lancedb"
+  type: milvus
+  host: "${{MILVUS_HOST:localhost}}"
+  port: ${{MILVUS_PORT:19530}}
+  collection_name: "graphrag_vectors"
+  metric_type: "COSINE"
+  index_params:
+    index_type: "IVF_FLAT"
+    params:
+      nlist: 1024
 
 extract_graph:
   model_id: default_chat_model

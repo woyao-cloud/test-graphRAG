@@ -1,0 +1,23 @@
+plugins {
+    id 'application'
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.neo4j.driver:neo4j-java-driver:5.20.0'
+    implementation 'io.milvus:milvus-sdk-java:2.4.3'
+    implementation 'dev.langchain4j:langchain4j:0.35.0'
+}
+
+application {
+    mainClass = 'com.graphrag.poc.App'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}

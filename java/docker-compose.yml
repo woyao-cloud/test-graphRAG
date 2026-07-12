@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  milvus:
+    image: milvusdb/milvus:latest
+    container_name: milvus
+    environment:
+      TZ: UTC
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    volumes:
+      - ./volumes/milvus:/var/lib/milvus
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 19530 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  neo4j:
+    image: neo4j:5.22.0
+    container_name: neo4j
+    environment:
+      NEO4J_AUTH: "neo4j/test"
+    ports:
+      - "7687:7687"
+      - "7474:7474"
+    volumes:
+      - ./volumes/neo4j:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 7687 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
