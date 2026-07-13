@@ -70,7 +70,7 @@ class Neo4jConfig(BaseModel):
     )
     store_embeddings: bool = Field(
         default=False,
-        description="Store embeddings in Neo4j (use LanceDB for vectors)",
+        description="Store embeddings in Neo4j (use Milvus for vectors)",
     )
 
     @property
@@ -311,7 +311,7 @@ class KGConfig(BaseModel):
         from graphrag_llm.config.model_config import ModelConfig
         from graphrag_input.input_config import InputConfig
         from graphrag_storage.storage_config import StorageConfig, StorageType
-        from graphrag_vectors.vector_store_config import VectorStoreConfig, VectorStoreType
+        from graphrag_vectors.vector_store_config import VectorStoreConfig
         from graphrag.config.models.reporting_config import ReportingConfig
         from graphrag_cache.cache_config import CacheConfig
 
@@ -385,14 +385,49 @@ class KGConfig(BaseModel):
                 type="file",
                 base_dir=str(self.logs_dir),
             ),
-            vector_store=VectorStoreConfig(
-                type=VectorStoreType.LanceDB,
-                db_uri=str(self.output_dir / "lancedb"),
-                vector_size=self._get_vector_size(),
-            ),
+            vector_store=self._build_vector_store_config(),
         )
 
         return config
+
+    def _build_vector_store_config(self) -> Any:
+        """Build VectorStoreConfig with Milvus parameters from settings/env."""
+        from graphrag_vectors.index_schema import IndexSchema
+        from graphrag_vectors.vector_store_config import VectorStoreConfig
+        import os
+
+        vs = self.graphrag_settings.get("vector_store", {})
+        vector_size = vs.get("vector_size") or self._get_vector_size()
+
+        host = vs.get("host") or os.environ.get("MILVUS_HOST", "localhost")
+        port = vs.get("port") or os.environ.get("MILVUS_PORT", "19530")
+        collection_name = vs.get("collection_name", "graphrag_vectors")
+        metric_type = vs.get("metric_type", "IP")
+        index_params = vs.get("index_params", {
+            "index_type": "IVF_FLAT",
+            "params": {"nlist": 1024},
+        })
+
+        # Build index_schema for Milvus collections
+        # Must match the names in graphrag's embed_text config defaults:
+        # entity_description, community_full_content, text_unit_text
+        index_schema: dict[str, Any] = {}
+        for table_name in ["entity_description", "text_unit_text", "community_full_content"]:
+            index_schema[table_name] = IndexSchema(
+                index_name=table_name,
+                vector_size=vector_size,
+            )
+
+        return VectorStoreConfig(
+            type="milvus",
+            host=host,
+            port=int(port),
+            collection_name=collection_name,
+            metric_type=metric_type,
+            index_params=index_params,
+            vector_size=vector_size,
+            index_schema=index_schema,
+        )
 
     def _get_vector_size(self) -> int:
         """Determine vector dimension based on embedding model."""

@@ -24,7 +24,13 @@ def _safe(text: str) -> str:
     """Replace characters unsupported by current console encoding."""
     encoding = sys.stdout.encoding or "utf-8"
     if encoding.lower() in ("gbk", "gb2312", "gb18030", "cp936"):
+        # First handle known Unicode chars that GBK can't encode
         text = _GBK_UNSAFE_RE.sub(lambda m: _REPL.get(m.group(0), "?"), text)
+        # Then encode/decode to catch any remaining unsupported chars
+        try:
+            text = text.encode("gbk", errors="replace").decode("gbk", errors="replace")
+        except (UnicodeEncodeError, UnicodeDecodeError, LookupError):
+            pass
     return text
 
 

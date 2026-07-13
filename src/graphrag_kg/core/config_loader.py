@@ -344,4 +344,12 @@ class ConfigLoader:
                     f"Run 'graphrag-kg init' to create it."
                 )
 
+        # Check vector store configuration
+        vs = config.graphrag_settings.get("vector_store", {})
+        if vs.get("type") == "lancedb":
+            warnings.append(
+                "Vector store is configured as 'lancedb' but Milvus is expected. "
+                "Update settings.yaml vector_store section to use 'milvus'."
+            )
+
         return warnings

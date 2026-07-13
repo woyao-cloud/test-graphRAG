@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+target/
+*.class
+.gradle/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+java/.gradle/*
+# GraphRAG output
+output/
+input/
+cache/
+logs/
+update_output/
+
+# Neo4j
+neo4j_data/
+neo4j_logs/
+
+# Test data
+tests/fixtures/generated/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# MyPy
+.mypy_cache/
+volumes/*
+# Ruff
+.ruff_cache/

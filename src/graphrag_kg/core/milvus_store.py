@@ -1,3 +1,9 @@
+"""Milvus vector store using MilvusClient API (no deprecation warnings).
+
+Implements the graphrag_vectors VectorStore ABC with the modern
+MilvusClient interface (pymilvus >= 2.4).
+"""
+
 from __future__ import annotations
 
 import json
@@ -10,36 +16,31 @@ from graphrag_vectors.vector_store_factory import register_vector_store
 logger = logging.getLogger("graphrag_kg.core.milvus_store")
 
 try:
-    from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections, utility
+    from pymilvus import DataType, MilvusClient
 except ImportError:  # pragma: no cover
-    Collection = None
-    CollectionSchema = None
+    MilvusClient = None
     DataType = None
-    FieldSchema = None
-    connections = None
-    utility = None
     _PYMILVUS_AVAILABLE = False
 else:
     _PYMILVUS_AVAILABLE = True
 
 
 def _field_type_to_milvus_dtype(field_type: str) -> Any:
-    field_type = field_type.lower()
-    if field_type in ("str", "string"):
+    """Map graphrag field type strings to Milvus DataType."""
+    ft = field_type.lower()
+    if ft in ("str", "string"):
         return DataType.VARCHAR
-    if field_type in ("int", "integer"):
+    if ft in ("int", "integer"):
         return DataType.INT64
-    if field_type in ("float", "double"):
+    if ft in ("float", "double"):
         return DataType.DOUBLE
-    if field_type in ("bool", "boolean"):
+    if ft in ("bool", "boolean"):
         return DataType.BOOL
-    if field_type == "date":
-        return DataType.VARCHAR
     return DataType.VARCHAR
 
 
 class MilvusVectorStore(VectorStore):
-    """A Milvus-backed vector store for GraphRAG custom vector storage."""
+    """Milvus-backed vector store using the modern MilvusClient API."""
 
     def __init__(
         self,
@@ -54,7 +55,7 @@ class MilvusVectorStore(VectorStore):
         host: str = "localhost",
         port: int | str = 19530,
         collection_name: str | None = None,
-        metric_type: str = "COSINE",
+        metric_type: str = "IP",
         index_params: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
@@ -71,206 +72,92 @@ class MilvusVectorStore(VectorStore):
         )
         self.host = host
         self.port = int(port)
-        self.collection_name = collection_name or index_name
+        # Prefer index_name (per-table from index_schema) over collection_name
+        self.collection_name = index_name if index_name != "vector_index" else (collection_name or index_name)
         self.metric_type = metric_type.upper()
         self.index_params = index_params or {
             "index_type": "IVF_FLAT",
             "params": {"nlist": 1024},
         }
-        self._connection_alias = f"milvus_{self.collection_name}"
-        self._collection = None
+        self._client: MilvusClient | None = None
+
+    # ------------------------------------------------------------------
+    # Client lifecycle
+    # ------------------------------------------------------------------
 
     def _ensure_pymilvus(self) -> None:
         if not _PYMILVUS_AVAILABLE:
             raise RuntimeError(
-                "Milvus vector store requires pymilvus. Install it with 'pip install pymilvus'."
+                "Milvus vector store requires pymilvus. "
+                "Install it with 'pip install pymilvus'."
             )
 
-    def _connect(self) -> None:
-        self._ensure_pymilvus()
+    @property
+    def client(self) -> MilvusClient:
+        """Get or create the MilvusClient singleton."""
+        if self._client is None:
+            self._ensure_pymilvus()
+            self._client = MilvusClient(host=self.host, port=self.port)
+        return self._client
 
-        if not connections.has_connection(self._connection_alias):
-            connections.connect(
-                alias=self._connection_alias,
-                host=self.host,
-                port=self.port,
-            )
-
-        if utility.has_collection(self.collection_name, using=self._connection_alias):
-            self._collection = Collection(
-                self.collection_name, using=self._connection_alias
-            )
-        else:
-            self._collection = None
-
-    def _build_collection_fields(self) -> list[Any]:
-        if not _PYMILVUS_AVAILABLE:
-            raise RuntimeError("pymilvus is not installed")
-
-        fields: list[Any] = [
-            FieldSchema(
-                name=self.id_field,
-                dtype=DataType.VARCHAR,
-                is_primary=True,
-                max_length=1024,
-            ),
-            FieldSchema(
-                name=self.vector_field,
-                dtype=DataType.FLOAT_VECTOR,
-                dim=self.vector_size,
-            ),
-        ]
-
-        for name, field_type in (self.fields or {}).items():
-            if name in {self.id_field, self.vector_field}:
-                continue
-            dtype = _field_type_to_milvus_dtype(field_type)
-            if dtype == DataType.VARCHAR:
-                fields.append(
-                    FieldSchema(name=name, dtype=dtype, max_length=1024)
-                )
-            else:
-                fields.append(FieldSchema(name=name, dtype=dtype))
-
-        fields.extend(
-            [
-                FieldSchema(
-                    name="json_data",
-                    dtype=DataType.VARCHAR,
-                    max_length=65535,
-                ),
-                FieldSchema(
-                    name=self.create_date_field,
-                    dtype=DataType.VARCHAR,
-                    max_length=64,
-                ),
-                FieldSchema(
-                    name=self.update_date_field,
-                    dtype=DataType.VARCHAR,
-                    max_length=64,
-                ),
-            ]
-        )
-
-        return fields
+    # ------------------------------------------------------------------
+    # VectorStore ABC implementation
+    # ------------------------------------------------------------------
 
     def connect(self) -> None:
-        self._connect()
+        """Connect to Milvus — lazy via client property."""
+        _ = self.client  # triggers init
 
     def create_index(self) -> None:
+        """Ensure the collection exists with schema and index."""
         self._ensure_pymilvus()
-        self._connect()
+        if self.client.has_collection(self.collection_name):
+            return
 
-        if self._collection is None:
-            schema = CollectionSchema(
-                fields=self._build_collection_fields(),
-                description="GraphRAG Milvus vector store schema",
-            )
-            self._collection = Collection(
-                self.collection_name,
-                schema,
-                using=self._connection_alias,
-            )
-
-        try:
-            self._collection.create_index(
-                field_name=self.vector_field,
-                index_params={
-                    "index_type": self.index_params.get(
-                        "index_type", "IVF_FLAT"
-                    ),
-                    "metric_type": self.metric_type,
-                    "params": self.index_params.get(
-                        "params", {"nlist": 1024}
-                    ),
-                },
-            )
-        except Exception:
-            logger.debug("Milvus index already exists or create_index failed", exc_info=True)
-
-        self._collection.load()
-
-    def _serialize_document(self, document: VectorStoreDocument) -> dict[str, list[Any]]:
-        self._prepare_document(document)
-
-        row: dict[str, list[Any]] = {
-            self.id_field: [str(document.id)],
-            self.vector_field: [document.vector or []],
-            "json_data": [json.dumps(document.data or {}, ensure_ascii=False)],
-            self.create_date_field: [document.create_date or ""],
-            self.update_date_field: [document.update_date or ""],
-        }
-
-        for name in (self.fields or {}).keys():
-            if name in {self.id_field, self.vector_field}:
-                continue
-            row[name] = [document.data.get(name) if document.data else None]
-
-        return row
+        schema = self._build_milvus_schema()
+        ip = self._build_milvus_index_params()
+        self.client.create_collection(
+            collection_name=self.collection_name,
+            schema=schema,
+            index_params=ip,
+        )
+        self.client.load_collection(self.collection_name)
+        logger.info(
+            "Created collection '%s' (dim=%d, metric=%s)",
+            self.collection_name,
+            self.vector_size,
+            self.metric_type,
+        )
 
     def load_documents(self, documents: list[VectorStoreDocument]) -> None:
+        """Batch-insert documents."""
         self._ensure_pymilvus()
         self.create_index()
 
-        rows = [self._serialize_document(document) for document in documents]
+        rows: list[dict[str, Any]] = []
+        for doc in documents:
+            self._prepare_document(doc)
+            row: dict[str, Any] = {
+                self.id_field: str(doc.id),
+                self.vector_field: doc.vector or [],
+                "json_data": json.dumps(doc.data or {}, ensure_ascii=False),
+                self.create_date_field: doc.create_date or "",
+                self.update_date_field: doc.update_date or "",
+            }
+            for name in (self.fields or {}):
+                if name in {self.id_field, self.vector_field}:
+                    continue
+                row[name] = doc.data.get(name) if doc.data else None
+            rows.append(row)
+
         if not rows:
             return
 
-        columns: dict[str, list[Any]] = {}
-        for row in rows:
-            for key, values in row.items():
-                columns.setdefault(key, []).extend(values)
-
-        self._collection.insert(columns)
+        self.client.insert(self.collection_name, rows)
         try:
-            self._collection.flush()
+            self.client.flush(self.collection_name)
         except Exception:
-            logger.debug("Milvus flush failed or is unsupported", exc_info=True)
-
-    def _extract_field(self, entity: Any, name: str) -> Any:
-        if entity is None:
-            return None
-        if isinstance(entity, dict):
-            return entity.get(name)
-        if hasattr(entity, "get"):
-            return entity.get(name)
-        if hasattr(entity, name):
-            return getattr(entity, name)
-        try:
-            return entity[name]
-        except Exception:
-            return None
-
-    def _parse_entity(self, entity: Any, score: float | None) -> VectorStoreSearchResult:
-        data_value = self._extract_field(entity, "json_data") or "{}"
-        if isinstance(data_value, bytes):
-            data_value = data_value.decode("utf-8", errors="ignore")
-        try:
-            data = json.loads(data_value)
-        except Exception:
-            data = {}
-
-        raw_id = self._extract_field(entity, self.id_field)
-        document = VectorStoreDocument(
-            id=str(raw_id) if raw_id is not None else "",
-            vector=None,
-            data=data,
-            create_date=self._extract_field(entity, self.create_date_field),
-            update_date=self._extract_field(entity, self.update_date_field),
-        )
-
-        if score is None:
-            score = 0.0
-
-        return VectorStoreSearchResult(document=document, score=score)
-
-    def _score_from_distance(self, distance: float) -> float:
-        distance = float(distance)
-        if self.metric_type == "COSINE":
-            return max(-1.0, min(1.0, 1.0 - distance))
-        if self.metric_type in {"IP", "INNER_PRODUCT"}:
-            return distance
-        return 1.0 / (1.0 + distance)
+            logger.debug("Milvus flush failed", exc_info=True)
 
     def similarity_search_by_vector(
         self,
@@ -280,12 +167,14 @@ class MilvusVectorStore(VectorStore):
         filters: Any = None,
         include_vectors: bool = True,
     ) -> list[VectorStoreSearchResult]:
+        """Search by vector similarity using MilvusClient."""
         self._ensure_pymilvus()
         self.create_index()
 
+        # Determine output fields
         output_fields = []
         if select:
-            output_fields.extend(select)
+            output_fields = list(select)
         else:
             output_fields = [
                 self.id_field,
@@ -293,33 +182,44 @@ class MilvusVectorStore(VectorStore):
                 self.create_date_field,
                 self.update_date_field,
             ]
+            # Add content fields that exist in the collection schema
+            try:
+                desc = self.client.describe_collection(self.collection_name)
+                schema_fields = {f["name"] for f in desc.get("schema", {}).get("fields", [])}
+                for cf in ["text", "title", "description", "summary", "full_content"]:
+                    if cf in schema_fields and cf not in output_fields:
+                        output_fields.append(cf)
+            except Exception:
+                pass
 
-        if include_vectors:
-            output_fields.append(self.vector_field)
-
-        search_params = {
-            "metric_type": self.metric_type,
-            "params": self.index_params.get("search_params", {"nprobe": 10}),
-        }
-
-        search_result = self._collection.search(
+        # MilvusClient returns: [[{"id":..., "distance":..., "entity":{...}}]]
+        raw = self.client.search(
+            collection_name=self.collection_name,
             data=[query_embedding],
             anns_field=self.vector_field,
-            param=search_params,
+            search_params={
+                "metric_type": self.metric_type,
+                "params": self.index_params.get("search_params", {"nprobe": 10}),
+            },
             limit=k,
             output_fields=output_fields,
         )
 
-        hits = search_result[0] if search_result else []
+        hits = raw[0] if raw else []
         results: list[VectorStoreSearchResult] = []
-
         for hit in hits:
-            entity = getattr(hit, "entity", None) or hit
-            distance = getattr(hit, "distance", None) or getattr(hit, "score", None)
-            score = self._score_from_distance(distance) if distance is not None else 0.0
-            result = self._parse_entity(entity, score)
-            if include_vectors and hasattr(entity, self.vector_field):
-                result.document.vector = self._extract_field(entity, self.vector_field)
+            entity = hit.get("entity", {})
+            distance = hit.get("distance", 0.0)
+            score = self._score_from_distance(distance)
+            result = self._parse_search_hit(hit["id"], entity, score)
+            if include_vectors:
+                try:
+                    qr = self.client.get(self.collection_name, ids=[hit["id"]])
+                    if qr:
+                        vec = qr[0].get(self.vector_field)
+                        result.document.vector = vec
+                except Exception:
+                    pass
             results.append(result)
 
         return results
@@ -330,52 +230,146 @@ class MilvusVectorStore(VectorStore):
         select: list[str] | None = None,
         include_vectors: bool = True,
     ) -> VectorStoreDocument:
+        """Look up a document by its ID."""
         self._ensure_pymilvus()
         self.create_index()
 
-        entity = self._collection.query(
-            expr=f"{self.id_field} == '{id}'",
-            output_fields=select or [
-                self.id_field,
-                "json_data",
-                self.create_date_field,
-                self.update_date_field,
-            ],
-        )
+        output_fields = select or [
+            self.id_field,
+            "json_data",
+            self.create_date_field,
+            self.update_date_field,
+        ]
+        if include_vectors and self.vector_field not in output_fields:
+            output_fields.append(self.vector_field)
 
-        if not entity:
+        raw = self.client.get(
+            self.collection_name,
+            ids=[id],
+            output_fields=output_fields,
+        )
+        if not raw:
             raise ValueError(f"Document not found: {id}")
 
-        result = self._parse_entity(entity[0], None)
+        result = self._parse_search_hit(raw[0].get(self.id_field), raw[0], None)
         if include_vectors:
-            result.document.vector = self._extract_field(
-                entity[0], self.vector_field
-            )
+            result.document.vector = raw[0].get(self.vector_field)
         return result.document
 
     def count(self) -> int:
+        """Return number of entities in the collection."""
         self._ensure_pymilvus()
-        self._connect()
-        if self._collection is None:
+        if not self.client.has_collection(self.collection_name):
             return 0
-        return self._collection.num_entities
+        desc = self.client.describe_collection(self.collection_name)
+        return desc.get("num_entities", 0)
 
     def remove(self, ids: list[str]) -> None:
+        """Delete documents by their IDs."""
         self._ensure_pymilvus()
         self.create_index()
-        expr = " or ".join(
-            f"{self.id_field} == '{item}'" for item in ids
-        )
-        self._collection.delete(expr)
+        self.client.delete(self.collection_name, ids=ids)
         try:
-            self._collection.flush()
+            self.client.flush(self.collection_name)
         except Exception:
-            logger.debug("Milvus flush failed or unsupported after delete", exc_info=True)
+            logger.debug("Milvus flush failed after delete", exc_info=True)
 
     def update(self, document: VectorStoreDocument) -> None:
-        self._ensure_pymilvus()
+        """Replace a document (delete + re-insert)."""
         self.remove([str(document.id)])
         self.load_documents([document])
+
+    # ------------------------------------------------------------------
+    # Schema and index helpers
+    # ------------------------------------------------------------------
+
+    def _build_milvus_schema(self) -> Any:
+        """Build a MilvusClient schema with id, vector, json_data, date fields."""
+        schema = MilvusClient.create_schema(auto_id=False, enable_dynamic_field=True)
+        schema.add_field(
+            self.id_field,
+            datatype=DataType.VARCHAR,
+            max_length=1024,
+            is_primary=True,
+        )
+        schema.add_field(
+            self.vector_field,
+            datatype=DataType.FLOAT_VECTOR,
+            dim=self.vector_size,
+        )
+        for name, field_type in (self.fields or {}).items():
+            if name in {self.id_field, self.vector_field}:
+                continue
+            dtype = _field_type_to_milvus_dtype(field_type)
+            if dtype == DataType.VARCHAR:
+                schema.add_field(name, datatype=dtype, max_length=1024)
+            else:
+                schema.add_field(name, datatype=dtype)
+        schema.add_field("json_data", datatype=DataType.VARCHAR, max_length=65535)
+        schema.add_field(self.create_date_field, datatype=DataType.VARCHAR, max_length=64)
+        schema.add_field(self.update_date_field, datatype=DataType.VARCHAR, max_length=64)
+        return schema
+
+    def _build_milvus_index_params(self) -> Any:
+        """Build index params for MilvusClient."""
+        ip = MilvusClient.prepare_index_params()
+        ip.add_index(
+            field_name=self.vector_field,
+            index_type=self.index_params.get("index_type", "IVF_FLAT"),
+            metric_type=self.metric_type,
+            params=self.index_params.get("params", {"nlist": 1024}),
+        )
+        return ip
+
+    # ------------------------------------------------------------------
+    # Result parsing
+    # ------------------------------------------------------------------
+
+    def _parse_search_hit(
+        self,
+        raw_id: Any,
+        entity: dict[str, Any],
+        score: float | None,
+    ) -> VectorStoreSearchResult:
+        """Parse a MilvusClient search hit into a VectorStoreSearchResult."""
+        # Extract data from json_data or entity fields
+        data: dict = {}
+        data_value = entity.get("json_data") or ""
+        if isinstance(data_value, bytes):
+            data_value = data_value.decode("utf-8", errors="ignore")
+        if data_value.strip():
+            try:
+                data = json.loads(data_value)
+            except Exception:
+                pass
+
+        if not data:
+            for field_name in (self.fields or {}):
+                val = entity.get(field_name)
+                if val is not None:
+                    data[field_name] = val
+            for cf in ["text", "title", "description", "summary", "full_content"]:
+                val = entity.get(cf)
+                if val is not None:
+                    data[cf] = val
+
+        document = VectorStoreDocument(
+            id=str(raw_id) if raw_id is not None else "",
+            vector=None,
+            data=data,
+            create_date=entity.get(self.create_date_field),
+            update_date=entity.get(self.update_date_field),
+        )
+        return VectorStoreSearchResult(document=document, score=score or 0.0)
+
+    def _score_from_distance(self, distance: float) -> float:
+        """Convert Milvus distance to similarity score."""
+        distance = float(distance)
+        if self.metric_type == "COSINE":
+            return max(-1.0, min(1.0, 1.0 - distance))
+        if self.metric_type in {"IP", "INNER_PRODUCT"}:
+            return distance
+        return 1.0 / (1.0 + distance)
 
 
 def register_milvus_vector_store() -> None:

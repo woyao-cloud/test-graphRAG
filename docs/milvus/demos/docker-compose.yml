@@ -1,0 +1,373 @@
+version: '3.8'
+
+# Milvus 实战指南 — Demo 运行环境
+# 使用方法:
+#   docker compose up -d milvus          # 启动 Milvus 基础设施
+#   docker compose run --rm ch09-crud    # 运行单个 demo
+#   docker compose down -v               # 清理所有数据
+
+services:
+  # ============================================================
+  # Milvus 基础设施
+  # ============================================================
+  etcd:
+    container_name: milvus-etcd
+    image: quay.io/coreos/etcd:v3.5.5
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - etcd_data:/etcd
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    networks:
+      - milvus-net
+
+  minio:
+    container_name: milvus-minio
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/minio_data
+    command: minio server /minio_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - milvus-net
+
+  milvus:
+    container_name: milvus-standalone
+    image: milvusdb/milvus:v2.2.11
+    command: ["milvus", "run", "standalone"]
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+    volumes:
+      - milvus_data:/var/lib/milvus
+    depends_on:
+      - "etcd"
+      - "minio"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - milvus-net
+
+  # ============================================================
+  # Ch2: 向量基础理论
+  # ============================================================
+  ch02-vector-basics:
+    build:
+      context: ./ch02-vector-basics
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch02
+    working_dir: /app
+    volumes:
+      - ./ch02-vector-basics:/app
+    command: python main.py
+
+  # ============================================================
+  # Ch4: Milvus 架构组件演示
+  # ============================================================
+  ch04-milvus-architecture:
+    build:
+      context: ./ch04-milvus-architecture
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch04
+    working_dir: /app
+    volumes:
+      - ./ch04-milvus-architecture:/app
+    command: python main.py
+
+  # ============================================================
+  # Ch5: 索引性能对比
+  # ============================================================
+  ch05-index-performance:
+    build:
+      context: ./ch05-index-performance
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch05
+    working_dir: /app
+    volumes:
+      - ./ch05-index-performance:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch6: 数据模型设计
+  # ============================================================
+  ch06-data-model:
+    build:
+      context: ./ch06-data-model
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch06
+    working_dir: /app
+    volumes:
+      - ./ch06-data-model:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch7: 混合检索
+  # ============================================================
+  ch07-hybrid-search:
+    build:
+      context: ./ch07-hybrid-search
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch07
+    working_dir: /app
+    volumes:
+      - ./ch07-hybrid-search:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch9: CRUD 基础操作
+  # ============================================================
+  ch09-crud-basics:
+    build:
+      context: ./ch09-crud-basics
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch09
+    working_dir: /app
+    volumes:
+      - ./ch09-crud-basics:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch10: 最简 Milvus-RAG
+  # ============================================================
+  ch10-basic-rag:
+    build:
+      context: ./ch10-basic-rag
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch10
+    working_dir: /app
+    volumes:
+      - ./ch10-basic-rag:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch11: LangChain + Milvus
+  # ============================================================
+  ch11-langchain-rag:
+    build:
+      context: ./ch11-langchain-rag
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch11
+    working_dir: /app
+    volumes:
+      - ./ch11-langchain-rag:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch12: 检索优化（Rerank、动态阈值）
+  # ============================================================
+  ch12-search-optimization:
+    build:
+      context: ./ch12-search-optimization
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch12
+    working_dir: /app
+    volumes:
+      - ./ch12-search-optimization:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch13: 数据管道（切片、增量更新）
+  # ============================================================
+  ch13-data-pipeline:
+    build:
+      context: ./ch13-data-pipeline
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch13
+    working_dir: /app
+    volumes:
+      - ./ch13-data-pipeline:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch14: 高级 RAG（多级检索）
+  # ============================================================
+  ch14-advanced-rag:
+    build:
+      context: ./ch14-advanced-rag
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch14
+    working_dir: /app
+    volumes:
+      - ./ch14-advanced-rag:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch15: 性能压测
+  # ============================================================
+  ch15-performance-benchmark:
+    build:
+      context: ./ch15-performance-benchmark
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch15
+    working_dir: /app
+    volumes:
+      - ./ch15-performance-benchmark:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch17: 监控指标采集
+  # ============================================================
+  ch17-monitoring:
+    build:
+      context: ./ch17-monitoring
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch17
+    working_dir: /app
+    volumes:
+      - ./ch17-monitoring:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch19: 企业知识库
+  # ============================================================
+  ch19-enterprise-kb:
+    build:
+      context: ./ch19-enterprise-kb
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch19
+    working_dir: /app
+    volumes:
+      - ./ch19-enterprise-kb:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch20: 医疗领域 RAG
+  # ============================================================
+  ch20-vertical-rag:
+    build:
+      context: ./ch20-vertical-rag
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch20
+    working_dir: /app
+    volumes:
+      - ./ch20-vertical-rag:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+  # ============================================================
+  # Ch22: 评估体系
+  # ============================================================
+  ch22-evaluation:
+    build:
+      context: ./ch22-evaluation
+      dockerfile: Dockerfile
+    container_name: milvus-demo-ch22
+    working_dir: /app
+    volumes:
+      - ./ch22-evaluation:/app
+    depends_on:
+      milvus:
+        condition: service_healthy
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    command: python main.py
+
+volumes:
+  etcd_data:
+    driver: local
+  minio_data:
+    driver: local
+  milvus_data:
+    driver: local
+
+networks:
+  milvus-net:
+    name: milvus-net

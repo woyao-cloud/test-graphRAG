@@ -1,5 +1,7 @@
 """Main CLI entry point for GraphRAG-KG.
 
+GraphRAG Knowledge Graph Q&A System with Neo4j + Milvus hybrid storage.
+
 Usage:
     graphrag-kg --help
     graphrag-kg data generate --scenario pharma_supply_chain
@@ -48,7 +50,7 @@ def main_callback(
         False, "--version", "-V", help="Show version and exit"
     ),
 ) -> None:
-    """GraphRAG Knowledge Graph Q&A System with Neo4j + LanceDB hybrid storage."""
+    """GraphRAG Knowledge Graph Q&A System with Neo4j + Milvus hybrid storage."""
     if version:
         typer.echo(f"graphrag-kg v{__version__}")
 

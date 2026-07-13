@@ -1,12 +1,14 @@
-"""LanceDB vector store wrapper for graphrag embeddings.
+"""LanceDB vector store wrapper for graphrag embeddings (DEPRECATED).
 
-Provides typed access to LanceDB vector tables for text unit,
-entity, and community embeddings with search capabilities.
+This module is deprecated. Use graphrag_kg.core.milvus_store.MilvusVectorStore
+instead, which integrates with the graphrag library's factory pattern for both
+indexing and querying.
 """
 
 from __future__ import annotations
 
 import logging
+import warnings
 from pathlib import Path
 from typing import Any, Optional
 
@@ -16,13 +18,21 @@ logger = logging.getLogger("graphrag_kg.storage.vectors")
 
 
 class VectorStore:
-    """Wrapper around LanceDB for graphrag embedding storage.
+    """[DEPRECATED] Wrapper around LanceDB for graphrag embedding storage.
 
-    GraphRAG stores embeddings in LanceDB tables under output/lancedb/.
-    This provides a clean interface for vector search and retrieval.
+    This class is deprecated and will be removed in a future version.
+    Use MilvusVectorStore (graphrag_kg.core.milvus_store) instead,
+    which is automatically registered with the graphrag library's
+    vector store factory.
     """
 
     def __init__(self, db_uri: Path):
+        warnings.warn(
+            "graphrag_kg.storage.vector_store.VectorStore is deprecated. "
+            "Use graphrag_kg.core.milvus_store.MilvusVectorStore instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.db_uri = Path(db_uri)
         self._db: Any = None
 

@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="GraphRAG-KG API",
-    description="GraphRAG Knowledge Graph Q&A System with Neo4j + LanceDB",
+    description="GraphRAG Knowledge Graph Q&A System with Neo4j + Milvus",
     version=__version__,
     lifespan=lifespan,
     docs_url="/docs",

@@ -1,18 +1,23 @@
-"""Generate embeddings and populate LanceDB for querying.
-Run this after graphrag index completes to fix missing LanceDB data.
+"""Generate embeddings and populate Milvus for querying.
+Run this after graphrag index completes when the index pipeline's
+embedding step fails (e.g., DeepSeek doesn't support response_format).
+
+Uses the modern MilvusClient API (no deprecation warnings).
 """
-import json
 import logging
-import sys
 from pathlib import Path
 
 import pandas as pd
+from pymilvus import DataType, MilvusClient
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 log = logging.getLogger("embed_gen")
 
 OUTPUT_DIR = Path("D:/claude-code-project/graphRAG/output")
-LANCEDB_DIR = OUTPUT_DIR / "lancedb"
+
+# Milvus connection
+MILVUS_HOST = "localhost"
+MILVUS_PORT = 19530
 
 # Ollama BGE-M3 embedding endpoint
 EMBED_URL = "http://localhost:11434/api/embed"
@@ -20,21 +25,51 @@ EMBED_MODEL = "bge-m3"
 VECTOR_DIM = 1024
 
 
+def _get_client() -> MilvusClient:
+    """Get a MilvusClient instance."""
+    return MilvusClient(host=MILVUS_HOST, port=MILVUS_PORT)
+
+
+def _ensure_collection(name: str, client: MilvusClient) -> None:
+    """Create a Milvus collection with proper schema if it doesn't exist."""
+    if client.has_collection(name):
+        return
+
+    schema = MilvusClient.create_schema(auto_id=False, enable_dynamic_field=True)
+    schema.add_field("id", datatype=DataType.VARCHAR, max_length=1024, is_primary=True)
+    schema.add_field("vector", datatype=DataType.FLOAT_VECTOR, dim=VECTOR_DIM)
+    schema.add_field("json_data", datatype=DataType.VARCHAR, max_length=65535)
+    schema.add_field("create_date", datatype=DataType.VARCHAR, max_length=64)
+    schema.add_field("update_date", datatype=DataType.VARCHAR, max_length=64)
+
+    index_params = MilvusClient.prepare_index_params()
+    index_params.add_index(
+        field_name="vector",
+        index_type="IVF_FLAT",
+        metric_type="IP",
+        params={"nlist": 1024},
+    )
+
+    client.create_collection(collection_name=name, schema=schema, index_params=index_params)
+    client.load_collection(name)
+    log.info("Created collection '%s' with %d-dim vectors", name, VECTOR_DIM)
+
+
 def get_embedding(text: str) -> list[float]:
     """Get embedding vector from Ollama BGE-M3."""
     import requests
+
     resp = requests.post(
         EMBED_URL,
         json={"model": EMBED_MODEL, "input": text},
         timeout=60,
     )
     resp.raise_for_status()
-    data = resp.json()
-    return data["embeddings"][0]
+    return resp.json()["embeddings"][0]
 
 
-def generate_text_unit_embeddings():
-    """Generate text unit embeddings and store in LanceDB."""
+def generate_text_unit_embeddings(client: MilvusClient) -> None:
+    """Generate text unit embeddings and store in Milvus."""
     path = OUTPUT_DIR / "text_units.parquet"
     if not path.exists():
         log.warning("No text_units.parquet found")
@@ -45,7 +80,9 @@ def generate_text_unit_embeddings():
         log.warning("text_units.parquet is empty")
         return
 
-    log.info(f"Generating embeddings for {len(df)} text units...")
+    log.info("Generating embeddings for %d text units...", len(df))
+    _ensure_collection("text_unit_text", client)
+
     records = []
     for i, row in df.iterrows():
         text = str(row.get("text", ""))
@@ -61,20 +98,22 @@ def generate_text_unit_embeddings():
                 "text": text,
                 "n_tokens": int(row.get("n_tokens", 0)),
                 "document_id": str(row.get("document_id", "")),
+                "json_data": "{}",
+                "create_date": "",
+                "update_date": "",
             })
             if (i + 1) % 5 == 0:
-                log.info(f"  {i+1}/{len(df)} text units done")
+                log.info("  %d/%d text units done", i + 1, len(df))
         except Exception as e:
-            log.warning(f"  Failed to embed text unit {tid}: {e}")
+            log.warning("Failed to embed text unit %s: %s", tid, e)
 
     if records:
-        import lancedb
-        db = lancedb.connect(str(LANCEDB_DIR))
-        tbl = db.create_table("text_unit_text", data=records, mode="overwrite")
-        log.info(f"Stored {len(records)} text unit embeddings in LanceDB")
+        client.insert("text_unit_text", records)
+        client.flush("text_unit_text")
+        log.info("Stored %d text unit embeddings in Milvus", len(records))
 
 
-def generate_entity_embeddings():
+def generate_entity_embeddings(client: MilvusClient) -> None:
     """Generate entity description embeddings."""
     path = OUTPUT_DIR / "entities.parquet"
     if not path.exists():
@@ -85,13 +124,14 @@ def generate_entity_embeddings():
     if len(df) == 0:
         return
 
-    log.info(f"Generating embeddings for {len(df)} entities...")
+    log.info("Generating embeddings for %d entities...", len(df))
+    _ensure_collection("entity_description", client)
+
     records = []
     for i, row in df.iterrows():
         desc = str(row.get("description", ""))
         eid = str(row.get("id", f"ent_{i}"))
         name = str(row.get("title", ""))
-        # Use name + description for better embedding
         text = f"{name}: {desc}" if desc else name
         if not text.strip():
             continue
@@ -104,20 +144,22 @@ def generate_entity_embeddings():
                 "title": name,
                 "type": str(row.get("type", "")),
                 "description": desc,
+                "json_data": "{}",
+                "create_date": "",
+                "update_date": "",
             })
             if (i + 1) % 10 == 0:
-                log.info(f"  {i+1}/{len(df)} entities done")
+                log.info("  %d/%d entities done", i + 1, len(df))
         except Exception as e:
-            log.warning(f"  Failed to embed entity {eid}: {e}")
+            log.warning("Failed to embed entity %s: %s", eid, e)
 
     if records:
-        import lancedb
-        db = lancedb.connect(str(LANCEDB_DIR))
-        tbl = db.create_table("entity_description", data=records, mode="overwrite")
-        log.info(f"Stored {len(records)} entity embeddings in LanceDB")
+        client.insert("entity_description", records)
+        client.flush("entity_description")
+        log.info("Stored %d entity embeddings in Milvus", len(records))
 
 
-def generate_community_embeddings():
+def generate_community_embeddings(client: MilvusClient) -> None:
     """Generate community report embeddings."""
     path = OUTPUT_DIR / "community_reports.parquet"
     if not path.exists():
@@ -128,7 +170,9 @@ def generate_community_embeddings():
     if len(df) == 0:
         return
 
-    log.info(f"Generating embeddings for {len(df)} community reports...")
+    log.info("Generating embeddings for %d community reports...", len(df))
+    _ensure_collection("community_full_content", client)
+
     records = []
     for i, row in df.iterrows():
         content = str(row.get("full_content", row.get("content", "")))
@@ -147,35 +191,37 @@ def generate_community_embeddings():
                 "summary": str(row.get("summary", "")),
                 "full_content": content,
                 "level": int(row.get("level", 0)),
+                "json_data": "{}",
+                "create_date": "",
+                "update_date": "",
             })
             if (i + 1) % 5 == 0:
-                log.info(f"  {i+1}/{len(df)} communities done")
+                log.info("  %d/%d communities done", i + 1, len(df))
         except Exception as e:
-            log.warning(f"  Failed to embed community {cid}: {e}")
+            log.warning("Failed to embed community %s: %s", cid, e)
 
     if records:
-        import lancedb
-        db = lancedb.connect(str(LANCEDB_DIR))
-        tbl = db.create_table("community_full_content", data=records, mode="overwrite")
-        log.info(f"Stored {len(records)} community embeddings in LanceDB")
+        client.insert("community_full_content", records)
+        client.flush("community_full_content")
+        log.info("Stored %d community embeddings in Milvus", len(records))
 
 
 if __name__ == "__main__":
     log.info("=" * 50)
-    log.info("Generating missing embeddings for LanceDB")
-    log.info(f"Using {EMBED_MODEL} via Ollama at {EMBED_URL}")
-    log.info(f"Vector dimension: {VECTOR_DIM}")
+    log.info("Generating missing embeddings for Milvus")
+    log.info("Using %s via Ollama at %s", EMBED_MODEL, EMBED_URL)
+    log.info("Vector dimension: %d", VECTOR_DIM)
     log.info("=" * 50)
 
-    generate_text_unit_embeddings()
-    generate_entity_embeddings()
-    generate_community_embeddings()
+    client = _get_client()
+
+    generate_text_unit_embeddings(client)
+    generate_entity_embeddings(client)
+    generate_community_embeddings(client)
 
     log.info("=" * 50)
-    log.info("Done! Verifying LanceDB...")
-    import lancedb
-    db = lancedb.connect(str(LANCEDB_DIR))
-    for t in db.table_names():
-        tbl = db.open_table(t)
-        log.info(f"  {t}: {tbl.count_rows()} rows")
+    log.info("Done! Verifying Milvus collections...")
+    for name in client.list_collections():
+        desc = client.describe_collection(name)
+        log.info("  %s: %s entities", name, desc.get("num_entities", "?"))
     log.info("=" * 50)
