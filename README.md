@@ -108,6 +108,7 @@ graphrag-kg init --name my-kg --force
 ```bash
 # 从测试数据导入=
 graphrag-kg ingest run --source tests/fixtures/generated/pharma_supply_chain/documents
+graphrag-kg ingest run --source tests/fixtures/generated/tech_company/documents
 
 # 从自定义目录导入
 graphrag-kg ingest run --source ./my-docs --patterns "**/*.pdf,**/*.md"
@@ -397,6 +398,13 @@ src/graphrag_kg/
 | `fastapi` | >=0.110.0 | REST API（可选） |
 | `uvicorn` | >=0.27.0 | ASGI 服务器（可选） |
 
+
+》》》本地测试-运行命令：
+graphrag-kg ingest run --source tests/fixtures/generated/pharma_supply_chain/documents
+graphrag-kg index run --method standard
+graphrag-kg graph sync
+
+》》》本地测试-运行命令
 
 ## history 切换model运行以下命令
 D:\claude-code-project\graphRAG>graphrag-kg index run --method standard

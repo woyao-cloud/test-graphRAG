@@ -2,11 +2,37 @@
 
 from __future__ import annotations
 
+import os
+import re
+import sys
+
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
+from rich.table import Table
+
+# On Windows, set console to UTF-8 to avoid encoding errors
+if sys.platform == "win32":
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+
+# Characters that commonly cause issues on Windows GBK consoles
+_GBK_UNSAFE_RE = re.compile(r"[‑‒–—―‘’“”…′″]")
+
+
+def _safe(text: str) -> str:
+    """Replace characters unsupported by current console encoding."""
+    encoding = sys.stdout.encoding or "utf-8"
+    if encoding.lower() in ("gbk", "gb2312", "gb18030", "cp936"):
+        text = _GBK_UNSAFE_RE.sub(lambda m: _REPL.get(m.group(0), "?"), text)
+    return text
+
+
+_REPL = {
+    "‑": "-", "‒": "-", "–": "-", "—": "--", "―": "--",
+    "‘": "'", "’": "'", "“": '"', "”": '"', "…": "...", "′": "'", "″": '"',
+}
+
 
 console = Console(force_terminal=True)
 

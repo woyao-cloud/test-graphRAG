@@ -101,15 +101,8 @@ reporting:
   base_dir: "logs"
 
 vector_store:
-  type: milvus
-  host: "${MILVUS_HOST:localhost}"
-  port: ${MILVUS_PORT:19530}
-  collection_name: "graphrag_vectors"
-  metric_type: "COSINE"
-  index_params:
-    index_type: "IVF_FLAT"
-    params:
-      nlist: 1024
+  type: lancedb
+  db_uri: "output/lancedb"
 
 extract_graph:
   model_id: default_chat_model

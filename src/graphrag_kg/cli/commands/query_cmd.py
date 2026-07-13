@@ -77,10 +77,11 @@ def ask(
             import json
             console.print_json(json.dumps(response.to_dict(), ensure_ascii=False, indent=2))
         else:
-            # Print answer
+            # Print answer (safe for Windows console encoding)
             console.print()
             console.print(f"[bold]Answer:[/bold]")
-            console.print(response.answer)
+            from graphrag_kg.cli.utils import _safe
+            console.print(_safe(response.answer))
             console.print()
 
             # Print metadata
