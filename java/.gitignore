@@ -10,7 +10,7 @@ build/
 target/
 *.class
 .gradle/
-
+.gradle/*
 # Virtual environments
 venv/
 .venv/

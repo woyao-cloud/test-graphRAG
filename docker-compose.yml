@@ -49,7 +49,18 @@ services:
       - "etcd"
       - "minio"
 
-
+  attu:
+    container_name: milvus-attu
+    image: zilliz/attu:v2.6
+    ports:
+      - "8000:3000"
+    environment:
+      - MILVUS_HOST=standalone
+      - MILVUS_PORT=19530
+      - ATTU_USERNAME=admin
+      - ATTU_PASSWORD=admin
+    depends_on:
+      - "standalone"
 
   neo4j:
     image: neo4j:5.22.0
@@ -74,6 +85,42 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: milvus-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alerts:/etc/prometheus/alerts
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=50GB'
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: milvus-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
 
 networks:
   default:

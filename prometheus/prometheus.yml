@@ -1,0 +1,14 @@
+# Prometheus 配置文件 — 采集 Milvus 指标
+# 参考: docs/Milvus/ch17-monitoring.md
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'milvus'
+    static_configs:
+      - targets:
+        - 'standalone:9091'
+    metrics_path: '/metrics'
+    scheme: 'http'

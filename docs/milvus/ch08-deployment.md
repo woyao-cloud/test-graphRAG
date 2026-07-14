@@ -323,7 +323,7 @@ docker run -d \
   --name attu \
   -p 8000:3000 \
   -e MILVUS_URL=localhost:19530 \
-  zilliz/attu:latest
+  zilliz/attu:v2.6
 ```
 
 启动后，在浏览器中访问`http://localhost:8000`即可打开Attu管理界面。在连接配置中输入Milvus地址（如果Attu和Milvus在不同机器，填写对应的IP和端口）。
